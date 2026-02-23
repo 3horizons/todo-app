@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the architecture of the Azure SRE Demo application, a full-stack Todo application designed to demonstrate Azure monitoring, alerting, and SRE Agent capabilities through intentional chaos engineering scenarios.
+This document describes the architecture of the Azure SRE Demo application, a full-stack Todo application designed to demonstrate Azure monitoring, alerting, SRE Agent capabilities through intentional chaos engineering scenarios, and AI-powered end-to-end testing with GitHub Copilot custom agents.
 
 ## Architecture Diagram
 
@@ -111,6 +111,14 @@ This document describes the architecture of the Azure SRE Demo application, a fu
 - Optimistic UI updates
 - Toast notifications for user feedback
 - Priority color coding (High=red, Medium=yellow, Low=green)
+
+**Pages and Routes:**
+- `/dashboard` — Stats cards, recent tasks, priority breakdown, quick links
+- `/todos` — Task list with CRUD via modal, search, status/priority filters
+- `/projects` — Project cards with status badges, create project modal
+- `/projects/:id` — Project details with tasks, team members, priority breakdown
+- `/users` — Team member list with search and role filter
+- `/users/:id` — User profile with assigned tasks, performance metrics, account info
 
 ### Backend API (Node.js + Express + TypeScript)
 
@@ -350,6 +358,124 @@ performanceCounters
 6. Terraform apply
 7. Drift detection (scheduled)
 
+## E2E Testing Architecture
+
+The project includes a comprehensive end-to-end testing framework using **Playwright** with AI-powered test generation through **GitHub Copilot custom agents**.
+
+### Testing Stack
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│              Copilot Custom Agents                         │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │   Explorer   │  │   Planner    │  │ Implementer  │  │
+│  │  (MCP Nav)   │─▶│ (Test Plan)  │─▶│ (Code Gen)   │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                 Playwright Test Runner                      │
+│                                                             │
+│  ┌───────────────┐  ┌───────────────┐  ┌──────────────┐  │
+│  │  Page Object  │  │  Test Specs   │  │   Fixtures   │  │
+│  │    Models    │  │  (*.spec.ts)  │  │  (Mock Data)  │  │
+│  └───────────────┘  └───────────────┘  └──────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│          Frontend (Vite Dev Server :5173)                    │
+│          API Mocks via page.route()                         │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Test Directory Structure
+
+```
+e2e/
+  playwright.config.ts    # Test runner configuration
+  tsconfig.json           # TypeScript configuration
+  package.json            # Dependencies (@playwright/test)
+  pages/                  # Page Object Models
+    layout.page.ts        #   Navigation, header, mobile menu
+    dashboard.page.ts     #   Stats cards, links, priority breakdown
+    todos.page.ts         #   Task list, filters, search, create modal
+    projects.page.ts      #   Project list, create modal
+    users.page.ts         #   User list, search, role filter
+  tests/                  # Test specifications
+    navigation.spec.ts    #   Routing, menu, active states, redirects
+    dashboard.spec.ts     #   Stats rendering, card links
+    todos.spec.ts         #   CRUD, filtering, search, toggle
+    projects.spec.ts      #   CRUD, detail view, members
+    users.spec.ts         #   List, search, detail view
+  fixtures/               # Shared resources
+    mock-data.ts          #   Mock API responses for todos, projects, users
+```
+
+### Key Design Decisions
+
+**API Mocking Strategy:**
+- All E2E tests use `page.route()` to intercept API calls
+- Mock responses are defined in shared fixture files
+- Tests never depend on a running backend — only the Vite dev server
+- Different mock data for testing states: empty, populated, error
+
+**Selector Strategy (priority order):**
+1. `getByRole()` — buttons, links, headings, comboboxes
+2. `getByText()` — visible text content
+3. `getByPlaceholder()` — form input placeholders
+4. `getByLabel()` — labeled form fields
+5. `locator('[data-testid="..."]')` — fallback only
+
+**Multi-Viewport Testing:**
+- Desktop Chrome (default viewport)
+- Mobile iPhone 13 (tests responsive layout, mobile menu)
+
+### Copilot Agent Pipeline
+
+The test generation process is automated through 4 specialized agents:
+
+1. **Explorer** (`playwright-explorer.agent.md`)
+   - Uses Playwright MCP to navigate the live application
+   - Takes snapshots of each page
+   - Documents interactive elements with accessible selectors
+   - Outputs `.testagent/exploration.md`
+
+2. **Planner** (`playwright-planner.agent.md`)
+   - Reads exploration findings and source code
+   - Organizes tests into incremental phases
+   - Defines Page Objects, mock data, and test cases
+   - Outputs `.testagent/e2e-plan.md`
+
+3. **Implementer** (`playwright-implementer.agent.md`)
+   - Implements one phase at a time
+   - Creates Page Object Models in `e2e/pages/`
+   - Writes test specs with API mocks in `e2e/tests/`
+   - Runs tests and fixes failures (up to 3 retries)
+
+4. **Tester (Orchestrator)** (`playwright-tester.agent.md`)
+   - Coordinates the full pipeline: Explorer → Planner → Implementer
+   - Ensures dev server is running
+   - Validates all tests pass before reporting
+
+### Running Tests
+
+```bash
+# From the frontend directory
+npm run test:e2e          # Run all tests (headless)
+npm run test:e2e:ui       # Interactive UI mode
+npm run test:e2e:headed   # Visible browser window
+
+# From the e2e directory
+cd e2e
+npx playwright test                        # All tests
+npx playwright test tests/todos.spec.ts    # Specific spec
+npx playwright test --project=mobile       # Mobile viewport only
+npx playwright test --list                 # List all tests
+npx playwright show-report                 # View HTML report
+```
+
 ## Security Considerations
 
 ### Current Configuration (Demo Mode)
@@ -486,3 +612,5 @@ performanceCounters
 - [Node.js Production Best Practices](https://nodejs.org/en/docs/guides/nodejs-docker-webapp/)
 - [React Performance Optimization](https://react.dev/learn/render-and-commit)
 - [Terraform Azure Provider](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
+- [Playwright Documentation](https://playwright.dev/docs/intro)
+- [GitHub Copilot Custom Agents](https://github.com/github/awesome-copilot/tree/main/agents)

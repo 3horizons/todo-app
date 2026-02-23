@@ -9,6 +9,8 @@ A comprehensive demonstration platform showcasing Azure SRE Agent capabilities w
 - [Tech Stack](#tech-stack)
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
+- [E2E Testing](#-e2e-testing)
+- [Copilot Agents](#-copilot-agents)
 - [Chaos Scenarios](#chaos-scenarios)
 - [Monitoring & Alerts](#monitoring--alerts)
 - [CI/CD Pipeline](#cicd-pipeline)
@@ -23,6 +25,8 @@ This repository demonstrates:
 - ✅ GitHub Actions CI/CD pipelines
 - ✅ Intentional bugs and chaos scenarios for SRE Agent demonstration
 - ✅ Automated issue creation and resolution workflows
+- ✅ End-to-end testing with Playwright and AI-powered test agents
+- ✅ Copilot custom agents for automated test generation and execution
 
 ## 🏗️ Architecture
 
@@ -70,6 +74,12 @@ This repository demonstrates:
 - **Azure Key Vault**
 - **Azure Monitor & Log Analytics**
 - **Terraform** for IaC
+
+### Testing
+- **Playwright** for end-to-end browser testing
+- **Playwright MCP** for visual exploration and test generation
+- **Page Object Model** pattern for maintainable tests
+- **API mocking** with `page.route()` for deterministic tests
 
 ### DevOps
 - **GitHub Actions** for CI/CD
@@ -146,6 +156,93 @@ Required secrets for GitHub Actions:
 - `DATABASE_URL`
 - `REDIS_CONNECTION_STRING`
 
+## 🧪 E2E Testing
+
+This project includes a comprehensive end-to-end testing infrastructure powered by **Playwright** and **Copilot custom agents**.
+
+### Quick Start
+
+```bash
+# Install Playwright (one-time setup)
+cd e2e && npm install && npx playwright install chromium
+
+# Run all E2E tests
+npm run test:e2e
+
+# Run tests with UI mode (interactive)
+npm run test:e2e:ui
+
+# Run tests in headed browser
+npm run test:e2e:headed
+```
+
+### Test Structure
+
+```
+e2e/
+  playwright.config.ts    # Playwright configuration (chromium + mobile)
+  pages/                  # Page Object Models
+  tests/                  # Test spec files
+  fixtures/               # Shared mock data and setup
+```
+
+### Testing Approach
+
+- **API Mocking**: All tests use `page.route()` to mock API calls — no backend required
+- **Page Object Model**: Each page has a dedicated POM class for maintainability
+- **Accessible Selectors**: Tests use `getByRole()`, `getByText()`, `getByPlaceholder()` over CSS selectors
+- **Multi-viewport**: Tests run on both desktop Chrome and mobile (iPhone 13) viewports
+- **Deterministic**: Mocked API responses ensure consistent, reliable test results
+
+### Test Coverage
+
+| Page | Tests | Coverage |
+|------|-------|----------|
+| Navigation & Layout | Menu, routing, mobile menu, redirects | Core |
+| Dashboard | Stats cards, links, priority breakdown | Core |
+| Todos | CRUD via modal, search, filters, toggle | Full |
+| Projects | List, create, detail view, members | Full |
+| Users | List, search, filter, detail view | Full |
+
+See [E2E Testing Instructions](.github/instructions/e2e-testing.instructions.md) for conventions and best practices.
+
+## 🤖 Copilot Agents
+
+This project includes specialized **GitHub Copilot custom agents** for automated test generation and infrastructure management.
+
+### Testing Agents
+
+| Agent | Description | Usage |
+|-------|-------------|-------|
+| **Playwright E2E Tester** | Orchestrates the full test pipeline: explore → plan → implement → run | `@playwright-tester "Generate tests for Todos page"` |
+| **Playwright Explorer** | Navigates the app via Playwright MCP, documents elements and flows | `@playwright-explorer "Explore the Dashboard"` |
+| **Playwright Test Planner** | Creates phased test plans from exploration findings | `@playwright-planner "Create test plan"` |
+| **Playwright Test Implementer** | Writes Page Objects and test specs, runs and fixes until passing | `@playwright-implementer "Implement Phase 3"` |
+
+### Infrastructure Agent
+
+| Agent | Description |
+|-------|-------------|
+| **Azure Infrastructure Expert** | Azure IaC, monitoring, troubleshooting, and optimization guidance |
+
+### Agent Pipeline
+
+```
+User invokes @playwright-tester
+  │
+  ├─► @playwright-explorer  →  Navigates site, documents in .testagent/exploration.md
+  │
+  ├─► @playwright-planner   →  Reads exploration + source, generates .testagent/e2e-plan.md
+  │
+  └─► @playwright-implementer (per phase)
+        ├─ Creates e2e/pages/*.page.ts (Page Objects)
+        ├─ Creates e2e/tests/*.spec.ts (with API mocks)
+        ├─ Runs npx playwright test
+        └─ Fixes failures (up to 3 retries)
+```
+
+Agent files are located in [`.github/agents/`](.github/agents/).
+
 ## 🔥 Chaos Scenarios
 
 This repository includes intentional bugs and performance issues for demonstration purposes. See [docs/CHAOS_SCENARIOS.md](docs/CHAOS_SCENARIOS.md) for detailed trigger instructions.
@@ -211,6 +308,8 @@ This repository includes intentional bugs and performance issues for demonstrati
 - 🏗️ [Architecture Details](docs/ARCHITECTURE.md)
 - 🔥 [Chaos Scenarios Guide](docs/CHAOS_SCENARIOS.md)
 - 🚀 [Deployment Guide](docs/DEPLOYMENT.md)
+- 🧪 [E2E Testing Instructions](.github/instructions/e2e-testing.instructions.md) - Testing conventions and patterns
+- 🤖 [Copilot Agents](.github/agents/) - Custom agents for test generation and infrastructure
 
 ## 🤝 Contributing
 

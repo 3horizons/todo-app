@@ -383,7 +383,49 @@ az portal open
 
 ## Post-Deployment Configuration
 
-### 1. Configure Monitoring Alerts
+### 1. Set Up E2E Testing
+
+After deployment, configure end-to-end testing for the frontend:
+
+```bash
+# Install Playwright (one-time setup)
+cd e2e
+npm install
+npx playwright install chromium
+
+# Run E2E tests against local dev server
+npm run test:e2e
+
+# Run E2E tests with interactive UI
+npm run test:e2e:ui
+
+# Run E2E tests with visible browser
+npm run test:e2e:headed
+```
+
+**Playwright MCP Integration (VS Code):**
+
+The project includes a `.vscode/mcp.json` configuration for the Playwright MCP server. This enables Copilot agents to visually explore the application and generate tests automatically.
+
+**Using Copilot Agents for Test Generation:**
+
+1. Open VS Code with the Copilot Chat panel
+2. Select the **Playwright E2E Tester** agent from the dropdown
+3. Ask: *"Generate E2E tests for the Todos page"*
+4. The agent pipeline runs: Explorer → Planner → Implementer
+5. Tests are created in `e2e/tests/` with Page Objects in `e2e/pages/`
+
+**Running Tests in CI:**
+
+```yaml
+- name: Run E2E tests
+  run: |
+    cd frontend && npm run dev &
+    sleep 5
+    cd ../e2e && npx playwright test --reporter=github
+```
+
+### 2. Configure Monitoring Alerts
 
 Alerts are automatically created by Terraform, but verify they're working:
 
@@ -395,7 +437,7 @@ curl -X POST $BACKEND_URL/api/chaos/cpu-spike
 # Wait 2-3 minutes for alert to fire
 ```
 
-### 2. Set Up Dashboard
+### 3. Set Up Dashboard
 
 1. Go to Azure Portal → Dashboards
 2. Create new dashboard named "SRE Demo Monitoring"
@@ -406,7 +448,7 @@ curl -X POST $BACKEND_URL/api/chaos/cpu-spike
    - Redis metrics
    - Alert summary
 
-### 3. Configure GitHub Integration (for SRE Agent)
+### 4. Configure GitHub Integration (for SRE Agent)
 
 This will be set up when you configure Azure SRE Agent:
 
