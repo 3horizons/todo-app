@@ -1,0 +1,30 @@
+name: AI Security Review Pipeline
+on: 
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  security-analysis:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Maps to apm.yml scripts
+        script: [copilot-sec-review, codex-sec-review, copilot-debug]  
+    permissions:
+      models: read
+      pull-requests: write
+      contents: read
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run Security Review (${{ matrix.script }})
+      uses: danielmeppiel/action-apm-cli@v1
+      with:
+        script: ${{ matrix.script }}
+        parameters: |
+          {
+            "pr_id": "${{ github.event.pull_request.number }}"
+          }
+      env:
+        GITHUB_COPILOT_PAT: ${{ secrets.COPILOT_CLI_PAT }}

@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:e2e": "cd ../e2e && npx playwright test",
+    "test:e2e:ui": "cd ../e2e && npx playwright test --ui",
+    "test:e2e:headed": "cd ../e2e && npx playwright test --headed"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.14.2",
