@@ -1,0 +1,93 @@
+{
+  "mcpServers": {
+    "azure": {
+      "type": "stdio",
+      "command": "az",
+      "args": [
+        "interactive",
+        "--style",
+        "none"
+      ],
+      "metadata": {
+        "description": "Azure CLI for resource management and monitoring",
+        "allowed": [
+          "az resource show",
+          "az resource list",
+          "az webapp log tail",
+          "az webapp restart",
+          "az webapp show",
+          "az monitor metrics list",
+          "az monitor app-insights query",
+          "az postgres flexible-server show",
+          "az redis show"
+        ],
+        "blocked": [
+          "az keyvault secret show --query value",
+          "az role assignment create --role Owner",
+          "az resource delete",
+          "az group delete"
+        ]
+      }
+    },
+    "terraform": {
+      "type": "stdio",
+      "command": "terraform",
+      "args": [],
+      "metadata": {
+        "description": "Terraform CLI for infrastructure management",
+        "allowed": [
+          "terraform init",
+          "terraform validate",
+          "terraform plan",
+          "terraform state list",
+          "terraform state show",
+          "terraform output",
+          "terraform fmt"
+        ],
+        "requireConfirmation": [
+          "terraform apply"
+        ],
+        "blocked": [
+          "terraform destroy"
+        ]
+      }
+    },
+    "github": {
+      "type": "stdio",
+      "command": "gh",
+      "args": [],
+      "metadata": {
+        "description": "GitHub CLI for repository and CI/CD operations",
+        "allowed": [
+          "gh pr list",
+          "gh pr view",
+          "gh issue list",
+          "gh issue view",
+          "gh run list",
+          "gh run view",
+          "gh run watch",
+          "gh codespace list",
+          "gh repo view"
+        ],
+        "requireConfirmation": [
+          "gh pr create",
+          "gh pr merge",
+          "gh workflow run"
+        ],
+        "blocked": [
+          "gh repo delete"
+        ]
+      }
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@anthropic-ai/playwright-mcp"
+      ],
+      "metadata": {
+        "description": "Playwright MCP for browser automation and E2E testing"
+      }
+    }
+  }
+}
