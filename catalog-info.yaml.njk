@@ -1,0 +1,140 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.name }}
+  title: "${{ values.name | title }} Todo App"
+  description: ${{ values.description }}
+  annotations:
+    github.com/project-slug: ${{ values.orgName }}/${{ values.repoName }}
+    backstage.io/techdocs-ref: dir:.
+    azure.com/resource-group: ${{ values.name }}-rg
+    backstage.io/source-location: url:https://github.com/${{ values.orgName }}/${{ values.repoName }}
+  tags:
+    - react
+    - nodejs
+    - typescript
+    - terraform
+    - azure
+    - three-horizons
+    - prisma
+    - playwright
+  links:
+    - title: GitHub Repository
+      url: https://github.com/${{ values.orgName }}/${{ values.repoName }}
+      icon: github
+    - title: CI/CD Pipelines
+      url: https://github.com/${{ values.orgName }}/${{ values.repoName }}/actions
+      icon: dashboard
+    - title: Launch in Codespaces
+      url: https://codespaces.new/${{ values.orgName }}/${{ values.repoName }}?quickstart=1
+      icon: cloud
+spec:
+  type: service
+  lifecycle: ${{ values.environment }}
+  owner: ${{ values.owner }}
+  system: ${{ values.system }}
+  providesApis:
+    - ${{ values.name }}-api
+  dependsOn:
+    - resource:default/postgresql
+{%- if values.enable_redis %}
+    - resource:default/redis
+{%- endif %}
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: ${{ values.name }}-api
+  title: "${{ values.name | title }} REST API"
+  description: "REST API for the ${{ values.name }} Todo application"
+  annotations:
+    github.com/project-slug: ${{ values.orgName }}/${{ values.repoName }}
+  tags:
+    - rest
+    - openapi
+    - nodejs
+    - express
+spec:
+  type: openapi
+  lifecycle: ${{ values.environment }}
+  owner: ${{ values.owner }}
+  system: ${{ values.system }}
+  definition: |
+    openapi: "3.0.0"
+    info:
+      title: "${{ values.name }} API"
+      version: "1.0.0"
+      description: "Todo application REST API"
+    servers:
+      - url: https://${{ values.name }}-backend.azurewebsites.net
+        description: "Azure App Service"
+    paths:
+      /api/todos:
+        get:
+          summary: List all todos
+          operationId: listTodos
+          responses:
+            "200":
+              description: List of todos
+              content:
+                application/json:
+                  schema:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Todo"
+        post:
+          summary: Create a new todo
+          operationId: createTodo
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/CreateTodo"
+          responses:
+            "201":
+              description: Todo created
+      /api/health:
+        get:
+          summary: Health check
+          operationId: healthCheck
+          responses:
+            "200":
+              description: Service is healthy
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/HealthStatus"
+    components:
+      schemas:
+        Todo:
+          type: object
+          properties:
+            id:
+              type: string
+            title:
+              type: string
+            completed:
+              type: boolean
+            createdAt:
+              type: string
+              format: date-time
+        CreateTodo:
+          type: object
+          required:
+            - title
+          properties:
+            title:
+              type: string
+            priority:
+              type: string
+              enum: [LOW, MEDIUM, HIGH, CRITICAL]
+        HealthStatus:
+          type: object
+          properties:
+            status:
+              type: string
+            uptime:
+              type: number
+            checks:
+              type: object
