@@ -1,0 +1,12 @@
+site_name: Todo App — Three Horizons Golden Path
+site_description: Full-stack Todo application with React, Node.js, Terraform, and Playwright
+nav:
+  - Home: index.md
+  - Architecture: ARCHITECTURE.md
+  - Deployment: DEPLOYMENT.md
+  - GitHub Setup: GITHUB_SETUP.md
+  - Copilot Agents: COPILOT_AGENT_WORKSHOP.md
+  - Chaos Engineering: CHAOS_SCENARIOS.md
+
+plugins:
+  - techdocs-core
