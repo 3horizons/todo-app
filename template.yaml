@@ -114,6 +114,15 @@ spec:
           type: boolean
           description: Enable Application Insights and Log Analytics
           default: true
+        trigger_infra_plan:
+          title: Trigger Infrastructure Plan
+          type: boolean
+          description: |
+            Run 'terraform plan' after repo creation.
+            Requires ARM_CLIENT_ID, ARM_CLIENT_SECRET, ARM_SUBSCRIPTION_ID,
+            ARM_TENANT_ID, POSTGRES_ADMIN_PASSWORD, ALERT_EMAIL secrets
+            to be configured in the new repo's Settings → Secrets.
+          default: false
 
     # ── Page 3: Repository Settings ──────────────────────────────────────
     - title: Repository Settings
@@ -173,6 +182,7 @@ spec:
           orgName: ${{ (parameters.repoUrl | parseRepoUrl).owner }}
           repoName: ${{ (parameters.repoUrl | parseRepoUrl).repo }}
           visibility: ${{ parameters.visibility }}
+          trigger_infra_plan: ${{ parameters.trigger_infra_plan }}
 
     # ── Step 2: Publish to GitHub ────────────────────────────────────────
     - id: publish
@@ -192,22 +202,57 @@ spec:
           - todo-app
           - ${{ parameters.environment }}
 
-    # ── Step 3: Trigger infrastructure deployment ────────────────────────
+    # ── Step 3: Create deployment environment in GitHub ───────────────────
+    - id: createEnvironment
+      name: Setup GitHub Environment
+      action: github:environment:create
+      input:
+        repoUrl: ${{ parameters.repoUrl }}
+        name: ${{ parameters.environment }}
+
+    # ── Step 4: Trigger infrastructure plan (optional) ───────────────────
     - id: triggerInfra
       name: Deploy Infrastructure
+      if: ${{ parameters.trigger_infra_plan }}
       action: github:actions:dispatch
       input:
         repoUrl: ${{ parameters.repoUrl }}
         workflowId: infrastructure-deploy.yml
         branchOrTagName: main
+        inputs:
+          action: plan
+          environment: ${{ parameters.environment }}
 
-    # ── Step 4: Register in catalog ──────────────────────────────────────
+    # ── Step 5: Register in catalog ──────────────────────────────────────
     - id: register
       name: Register in Catalog
       action: catalog:register
       input:
         repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
         catalogInfoPath: /catalog-info.yaml
+
+    # ── Step 6: Setup instructions ────────────────────────────────────────
+    - id: setupInstructions
+      name: Setup Instructions
+      action: debug:log
+      input:
+        message: |
+          ✅ Repository created: ${{ steps.publish.output.remoteUrl }}
+          ✅ GitHub Environment '${{ parameters.environment }}' configured
+          ✅ Codespaces ready: https://codespaces.new/${{ (parameters.repoUrl | parseRepoUrl).owner }}/${{ (parameters.repoUrl | parseRepoUrl).repo }}?quickstart=1
+
+          📋 To enable Azure infrastructure deployment, add these secrets to the repo:
+          → Settings → Secrets and variables → Actions → New repository secret
+
+          Required secrets:
+            ARM_CLIENT_ID        - Azure Service Principal App ID
+            ARM_CLIENT_SECRET    - Azure Service Principal Secret
+            ARM_SUBSCRIPTION_ID  - Azure Subscription ID
+            ARM_TENANT_ID        - Azure Tenant ID
+            POSTGRES_ADMIN_PASSWORD - PostgreSQL admin password
+            ALERT_EMAIL          - Email for alerts
+
+          Then run: Actions → Infrastructure Deploy → Run workflow → action: apply
 
   output:
     links:
@@ -222,4 +267,7 @@ spec:
         entityRef: ${{ steps.register.output.entityRef }}
       - title: "Azure Portal"
         icon: cloud
-        url: "https://portal.azure.com/#@/resource/subscriptions//resourceGroups/${{ parameters.name }}-rg"
+        url: "https://portal.azure.com"
+      - title: "Setup Azure Secrets"
+        icon: docs
+        url: "${{ steps.publish.output.remoteUrl }}/settings/secrets/actions"
