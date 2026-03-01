@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: todo-app
+  annotations:
+    github.com/project-slug: 3horizons/todo-app
+spec:
+  type: other
+  lifecycle: unknown
+  owner: platform-team
