@@ -1,0 +1,274 @@
+# Deployment Guide
+
+This guide provides step-by-step instructions for deploying the **${{ values.name }}** application to Azure.
+
+## Prerequisites
+
+### Required Tools
+
+1. **Azure CLI** (2.50+)
+   ```bash
+   brew install azure-cli
+   az --version
+   ```
+
+2. **Terraform** (1.5+)
+   ```bash
+   brew tap hashicorp/tap
+   brew install hashicorp/tap/terraform
+   terraform --version
+   ```
+
+3. **Node.js** (20 LTS)
+   ```bash
+   brew install node@20
+   node --version
+   ```
+
+4. **Docker** (24+)
+   ```bash
+   docker --version
+   ```
+
+5. **Git**
+   ```bash
+   git --version
+   ```
+
+### Azure Account Setup
+
+1. **Login to Azure CLI**
+   ```bash
+   az login
+   ```
+
+2. **Set Default Subscription**
+   ```bash
+   az account list --output table
+   az account set --subscription "YOUR_SUBSCRIPTION_ID"
+   ```
+
+3. **Create Service Principal for Terraform**
+   ```bash
+   az ad sp create-for-rbac \
+     --name "${{ values.name }}-terraform" \
+     --role Contributor \
+     --scopes /subscriptions/YOUR_SUBSCRIPTION_ID
+
+   # Save the output:
+   # - appId (ARM_CLIENT_ID)
+   # - password (ARM_CLIENT_SECRET)
+   # - tenant (ARM_TENANT_ID)
+   ```
+
+## Environment Configuration
+
+### 1. Clone Repository
+
+```bash
+git clone https://github.com/${{ values.orgName }}/${{ values.repoName }}.git
+cd ${{ values.repoName }}
+```
+
+### 2. Configure Terraform Variables
+
+```bash
+cd terraform
+```
+
+The environment-specific variables are pre-configured in `environments/`:
+- `environments/dev.tfvars` — Development (B1 SKUs, 30-day retention)
+- `environments/staging.tfvars` — Staging (S1/D2s SKUs, 60-day retention)
+- `environments/prod.tfvars` — Production (P1v3/D4s SKUs, 90-day retention)
+
+You still need to provide secrets (not stored in files):
+```bash
+export TF_VAR_postgres_admin_password="YourSecurePassword123!"
+```
+
+## Deployment Steps
+
+### Step 1: Deploy Infrastructure with Terraform
+
+```bash
+cd terraform
+
+terraform init
+terraform validate
+terraform plan -var-file="environments/${{ values.environment }}.tfvars" -out=tfplan
+terraform apply tfplan
+
+# Save outputs
+terraform output -json > terraform-outputs.json
+```
+
+**Key Outputs:**
+- `database_connection_string` — PostgreSQL connection
+- `redis_connection_string` — Redis connection
+- `app_service_url` — Backend URL
+- `static_web_app_url` — Frontend URL
+- `application_insights_connection_string` — Monitoring
+
+### Step 2: Configure GitHub Secrets
+
+Go to: **Settings → Secrets and variables → Actions**
+
+```
+Azure Authentication:
+  ARM_CLIENT_ID        — Service Principal App ID
+  ARM_CLIENT_SECRET    — Service Principal Secret
+  ARM_SUBSCRIPTION_ID  — Subscription ID
+  ARM_TENANT_ID        — Tenant ID
+
+Database:
+  POSTGRES_ADMIN_PASSWORD — PostgreSQL admin password
+
+Monitoring:
+  ALERT_EMAIL — Email for alerts
+
+App Service (from Terraform output):
+  AZURE_WEBAPP_NAME_DEV    — App Service name
+  AZURE_RESOURCE_GROUP     — ${{ values.name }}-rg
+
+Static Web App (from Terraform output):
+  AZURE_STATIC_WEB_APPS_API_TOKEN — Deployment token
+  VITE_API_BASE_URL               — Backend URL
+```
+
+### Step 3: Deploy Application
+
+#### Option A: GitHub Actions (Recommended)
+
+Push to `main` — pipelines trigger automatically:
+```bash
+git add .
+git commit -m "feat(${{ values.name }}): initial deployment"
+git push origin main
+```
+
+Or trigger manually:
+```bash
+gh workflow run backend-deploy.yml
+gh workflow run frontend-deploy.yml
+```
+
+#### Option B: Manual Backend Deployment
+
+```bash
+cd backend
+docker build -t ${{ values.name }}-backend:latest .
+az webapp config container set \
+  --name <WEBAPP_NAME> \
+  --resource-group ${{ values.name }}-rg \
+  --docker-custom-image-name ${{ values.name }}-backend:latest
+```
+
+### Step 4: Verify Deployment
+
+```bash
+BACKEND_URL=$(cd terraform && terraform output -raw app_service_url)
+
+# Health check
+curl $BACKEND_URL/api/health
+
+# Test todo creation
+curl -X POST $BACKEND_URL/api/todos \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Test Todo", "priority": "HIGH"}'
+
+# List todos
+curl $BACKEND_URL/api/todos
+```
+
+## Environment-Specific Deployments
+
+### Development
+```bash
+terraform apply -var-file="environments/dev.tfvars"
+```
+- Basic SKUs, single instance, extended logging, public access
+
+### Staging
+```bash
+terraform apply -var-file="environments/staging.tfvars"
+```
+- Standard SKUs, separate database, integration testing
+
+### Production
+```bash
+terraform apply -var-file="environments/prod.tfvars"
+```
+- Premium SKUs, autoscaling, geo-replication, private endpoints
+
+## Rollback Procedures
+
+### Backend Rollback
+```bash
+# Deploy previous version
+az webapp config container set \
+  --name <WEBAPP_NAME> \
+  --resource-group ${{ values.name }}-rg \
+  --docker-custom-image-name <previous-image-tag>
+az webapp restart --name <WEBAPP_NAME> --resource-group ${{ values.name }}-rg
+```
+
+### Database Rollback
+```bash
+az postgres flexible-server restore \
+  --resource-group ${{ values.name }}-rg \
+  --name ${{ values.name }}-postgres-restored \
+  --source-server ${{ values.name }}-postgres \
+  --restore-time "2024-01-15T10:30:00Z"
+```
+
+### Infrastructure Rollback
+```bash
+cd terraform
+terraform state pull > current-state.json
+terraform state push previous-state.json
+terraform apply
+```
+
+## Troubleshooting
+
+### Deployment Fails — Image Pull Error
+```bash
+az webapp config show --name <WEBAPP_NAME> --resource-group ${{ values.name }}-rg --query "siteConfig.appSettings"
+```
+
+### Database Connection Failed
+```bash
+az postgres flexible-server firewall-rule list --resource-group ${{ values.name }}-rg --name ${{ values.name }}-postgres
+```
+
+### Application Insights Not Receiving Data
+```bash
+az monitor app-insights component show --app ${{ values.name }}-appinsights --resource-group ${{ values.name }}-rg
+```
+
+### Debug Commands
+```bash
+# View App Service logs
+az webapp log tail --name <WEBAPP_NAME> --resource-group ${{ values.name }}-rg
+
+# SSH into container
+az webapp ssh --name <WEBAPP_NAME> --resource-group ${{ values.name }}-rg
+```
+
+## Cleanup
+
+```bash
+# Destroy all infrastructure
+cd terraform
+terraform destroy -var-file="environments/${{ values.environment }}.tfvars" -auto-approve
+
+# Or delete resource group directly
+az group delete --name ${{ values.name }}-rg --yes --no-wait
+```
+
+## References
+
+- [Azure App Service Deployment](https://learn.microsoft.com/azure/app-service/quickstart-nodejs)
+- [Azure Static Web Apps](https://learn.microsoft.com/azure/static-web-apps/)
+- [Terraform Azure Provider](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
+- [Prisma Migrations](https://www.prisma.io/docs/concepts/components/prisma-migrate)

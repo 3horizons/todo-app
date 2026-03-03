@@ -1,11 +1,13 @@
-# Azure SRE Demo - Terraform Variables Example
+# Todo App — Three Horizons Golden Path
+# Terraform Variables Example
 # Copy this file to terraform.tfvars and fill in your actual values
+# Or use the pre-configured environments: terraform/environments/{dev,staging,prod}.tfvars
 
 # Project Configuration
-project_name         = "sre-demo"
+project_name         = "my-todo-app"
 environment          = "dev"  # Options: dev, staging, prod
-location             = "eastus"
-resource_group_name  = "sre-demo-rg"
+location             = "brazilsouth"
+resource_group_name  = "my-todo-app-rg"
 
 # PostgreSQL Configuration
 postgres_admin_username = "adminuser"
@@ -24,7 +26,7 @@ app_service_sku_name = "B1"
 
 # Docker Configuration
 docker_registry_url = "YOUR_ACR_NAME.azurecr.io"  # e.g., sredemoacr.azurecr.io
-docker_image_name   = "sre-demo-backend"
+docker_image_name   = "my-todo-app-backend"
 docker_image_tag    = "latest"
 
 # Frontend Configuration
@@ -36,7 +38,7 @@ alert_email                  = "your-email@example.com"
 
 # Resource Tags
 tags = {
-  Project     = "SRE Demo"
+  Project     = "Todo App"
   Owner       = "Your Name"
   Environment = "dev"
   ManagedBy   = "Terraform"

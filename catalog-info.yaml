@@ -1,10 +1,21 @@
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: todo-app
+  name: todo-app-template
+  title: "Todo App — Golden Path Template"
+  description: "Source repository for the Full-Stack Todo Application Golden Path template"
   annotations:
     github.com/project-slug: 3horizons/todo-app
+    backstage.io/techdocs-ref: dir:.
+  tags:
+    - template-source
+    - golden-path
+    - three-horizons
+    - react
+    - nodejs
+    - terraform
+    - azure
 spec:
-  type: other
-  lifecycle: unknown
-  owner: platform-team
+  type: service
+  lifecycle: production
+  owner: group:default/platform-engineering

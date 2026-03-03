@@ -1,7 +1,7 @@
 {
-  "name": "sre-demo-backend",
+  "name": "todo-app-backend",
   "version": "1.0.0",
-  "description": "Backend API for SRE Demo Todo Application",
+  "description": "Backend API for Todo Application",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",

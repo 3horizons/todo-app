@@ -114,6 +114,11 @@ spec:
           type: boolean
           description: Enable Application Insights and Log Analytics
           default: true
+        enable_chaos:
+          title: Enable Chaos Scenarios
+          type: boolean
+          description: Enable SRE chaos engineering endpoints (/api/chaos/*). Recommended for dev environments.
+          default: true
         trigger_infra_plan:
           title: Trigger Infrastructure Plan
           type: boolean
@@ -149,6 +154,11 @@ spec:
           enumNames:
             - "Private"
             - "Public"
+        branch_protection:
+          title: Branch Protection
+          type: boolean
+          description: Protect the main branch (require PR with at least 1 approval)
+          default: true
 
   steps:
     # ── Step 1: Fetch skeleton (repo is the template) ────────────────────
@@ -162,6 +172,7 @@ spec:
           - "**/*.png"
           - "**/*.jpg"
           - "**/*.ico"
+          - "**/*.svg"
           - "**/*.woff"
           - "**/*.woff2"
           - "**/*.ttf"
@@ -170,6 +181,7 @@ spec:
           - "**/package-lock.json"
           - "**/pnpm-lock.yaml"
           - "**/*.lock"
+          - "**/playwright-report/**"
         values:
           name: ${{ parameters.name }}
           description: ${{ parameters.description }}
@@ -183,8 +195,18 @@ spec:
           repoName: ${{ (parameters.repoUrl | parseRepoUrl).repo }}
           visibility: ${{ parameters.visibility }}
           trigger_infra_plan: ${{ parameters.trigger_infra_plan }}
+          enable_chaos: ${{ parameters.enable_chaos }}
+          branch_protection: ${{ parameters.branch_protection }}
 
-    # ── Step 2: Publish to GitHub ────────────────────────────────────────
+    # ── Step 2: Remove template artifacts from output ─────────────────────
+    - id: cleanup
+      name: Remove Template Artifacts
+      action: fs:delete
+      input:
+        files:
+          - template.yaml
+
+    # ── Step 3: Publish to GitHub ────────────────────────────────────────
     - id: publish
       name: Publish to GitHub
       action: publish:github
@@ -195,14 +217,14 @@ spec:
         description: "${{ parameters.description }}"
         defaultBranch: main
         repoVisibility: ${{ parameters.visibility }}
-        protectDefaultBranch: true
+        protectDefaultBranch: ${{ parameters.branch_protection }}
         topics:
           - three-horizons
           - golden-path
           - todo-app
           - ${{ parameters.environment }}
 
-    # ── Step 3: Create deployment environment in GitHub ───────────────────
+    # ── Step 4: Create deployment environment in GitHub ───────────────────
     - id: createEnvironment
       name: Setup GitHub Environment
       action: github:environment:create
@@ -210,7 +232,7 @@ spec:
         repoUrl: ${{ parameters.repoUrl }}
         name: ${{ parameters.environment }}
 
-    # ── Step 4: Trigger infrastructure plan (optional) ───────────────────
+    # ── Step 5: Trigger infrastructure plan (optional) ───────────────────
     - id: triggerInfra
       name: Deploy Infrastructure
       if: ${{ parameters.trigger_infra_plan }}
@@ -223,7 +245,7 @@ spec:
           action: plan
           environment: ${{ parameters.environment }}
 
-    # ── Step 5: Register in catalog ──────────────────────────────────────
+    # ── Step 6: Register in catalog ──────────────────────────────────────
     - id: register
       name: Register in Catalog
       action: catalog:register
@@ -231,7 +253,7 @@ spec:
         repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
         catalogInfoPath: /catalog-info.yaml
 
-    # ── Step 6: Setup instructions ────────────────────────────────────────
+    # ── Step 7: Setup instructions ────────────────────────────────────────
     - id: setupInstructions
       name: Setup Instructions
       action: debug:log

@@ -744,4 +744,4 @@ curl http://localhost:3000/api/health
 
 ---
 
-*Document validated against sre-demo codebase - January 2026*
+*Document validated against the Three Horizons Todo App codebase — 2026*

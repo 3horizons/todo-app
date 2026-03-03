@@ -1,0 +1,239 @@
+# ${{ values.name | title }} — Todo App
+
+${{ values.description }}
+
+Built with the **Three Horizons Golden Path** template.
+
+## Architecture
+
+```
+┌─────────────────┐
+│  React Frontend  │
+│  (Static Web)    │
+└────────┬─────────┘
+         │
+         ▼
+┌─────────────────┐      ┌──────────────┐
+│  Express API     │◄────►│  PostgreSQL   │
+│  (App Service)   │      │  (Flexible)   │
+└────────┬─────────┘      └──────────────┘
+         │
+         ▼
+┌─────────────────┐      ┌──────────────┐
+│  Redis Cache     │      │  App Insights │
+│                  │      │  + Monitoring  │
+└─────────────────┘      └──────────────┘
+```
+
+## Tech Stack
+
+| Layer | Technology | Hosting |
+|-------|-----------|---------|
+| Frontend | React 18 + TypeScript + Vite + Tailwind CSS + React Query | Azure Static Web Apps |
+| Backend | Node.js 20 + Express + Prisma ORM + Redis + Winston | Azure App Service |
+| Database | PostgreSQL 16 | Azure Database for PostgreSQL Flexible Server |
+| Cache | Redis 7 | Azure Cache for Redis |
+| IaC | Terraform | AzureRM Provider |
+| CI/CD | GitHub Actions | 3 pipelines (frontend, backend, infrastructure) |
+| Testing | Playwright | E2E with Page Object Model |
+| Monitoring | Application Insights + Log Analytics | Azure Monitor |
+
+## Quick Start
+
+### Option 1: GitHub Codespaces (Recommended)
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/${{ values.orgName }}/${{ values.repoName }}?quickstart=1)
+
+The Codespace will automatically:
+- Install all dependencies (frontend, backend, e2e)
+- Start PostgreSQL and Redis containers
+- Run database migrations
+- Configure MCP servers for Copilot agents
+
+Then open two terminals:
+```bash
+# Terminal 1 — Backend
+cd backend && npm run dev
+
+# Terminal 2 — Frontend
+cd frontend && npm run dev
+```
+
+- Frontend: http://localhost:5173
+- Backend: http://localhost:3000
+
+### Option 2: Local Development
+
+```bash
+# Clone
+git clone https://github.com/${{ values.orgName }}/${{ values.repoName }}.git
+cd ${{ values.repoName }}
+
+# Install dependencies
+cd frontend && npm install && cd ..
+cd backend && npm install && cd ..
+
+# Start infrastructure
+docker-compose -f docker-compose.dev.yml up -d postgres redis
+
+# Run migrations
+cd backend && npx prisma migrate dev && cd ..
+
+# Start backend (terminal 1)
+cd backend && npm run dev
+
+# Start frontend (terminal 2)
+cd frontend && npm run dev
+```
+
+## Copilot Agents
+
+This project includes 8 specialized GitHub Copilot custom agents:
+
+| Agent | Command | Description |
+|-------|---------|-------------|
+| @todo-dev | `@todo-dev "Add priority field to todos"` | Full-stack app development (React + Express + Prisma) |
+| @todo-deploy | `@todo-deploy "Deploy to Azure dev"` | Terraform, GitHub Actions, Azure deployment |
+| @todo-sre | `@todo-sre "Trigger memory leak scenario"` | SRE, chaos engineering, monitoring, alerts |
+| @playwright-tester | `@playwright-tester "Generate tests for Todos"` | Orchestrates full E2E test pipeline |
+| @playwright-explorer | `@playwright-explorer "Explore Dashboard"` | Navigates app via Playwright MCP |
+| @playwright-planner | `@playwright-planner "Create test plan"` | Generates phased test plans |
+| @playwright-implementer | `@playwright-implementer "Implement Phase 1"` | Writes Page Objects + test specs |
+| @azure-infrastructure | `@azure "Check App Service health"` | Azure IaC, monitoring, troubleshooting |
+
+### Agent Pipeline
+
+```
+@todo-dev (write feature) → @playwright-tester (test it) → @todo-deploy (ship it) → @todo-sre (monitor it)
+```
+
+## E2E Testing
+
+```bash
+cd e2e && npm install && npx playwright install chromium
+
+# Run all tests
+npx playwright test
+
+# Run with UI mode
+npx playwright test --ui
+
+# Run in headed browser
+npx playwright test --headed
+```
+
+## Infrastructure Deployment
+
+### 1. Configure Azure Secrets
+
+Add these secrets to **Settings → Secrets and variables → Actions**:
+
+| Secret | Description |
+|--------|-------------|
+| `ARM_CLIENT_ID` | Azure Service Principal App ID |
+| `ARM_CLIENT_SECRET` | Azure Service Principal Secret |
+| `ARM_SUBSCRIPTION_ID` | Azure Subscription ID |
+| `ARM_TENANT_ID` | Azure Tenant ID |
+| `POSTGRES_ADMIN_PASSWORD` | PostgreSQL admin password |
+| `ALERT_EMAIL` | Email for monitoring alerts |
+
+### 2. Deploy Infrastructure
+
+```bash
+# Via GitHub Actions (recommended)
+gh workflow run infrastructure-deploy.yml -f action=apply -f environment=${{ values.environment }}
+
+# Or manually
+cd terraform
+terraform init
+terraform plan -var-file=environments/${{ values.environment }}.tfvars
+terraform apply -var-file=environments/${{ values.environment }}.tfvars
+```
+
+### 3. Deploy Application
+
+Push to `main` branch — CI/CD pipelines deploy automatically:
+- `backend-deploy.yml` → builds Docker image → deploys to App Service
+- `frontend-deploy.yml` → builds Vite → deploys to Static Web App
+
+## Chaos Engineering
+
+10 intentional scenarios for SRE testing and demonstration:
+
+| Scenario | Severity | Trigger |
+|----------|----------|---------|
+| Memory Leak | High | `POST /api/chaos/memory-leak` |
+| N+1 Query | Medium | `GET /api/todos?inefficient=true` |
+| Connection Pool Exhaustion | Critical | `POST /api/chaos/exhaust-pool` |
+| CPU Spike | Critical | `POST /api/chaos/cpu-spike` |
+| Database Timeout | High | `POST /api/chaos/db-timeout` |
+| Cache Invalidation Bug | Medium | `PUT /api/todos/:id?skipCache=true` |
+| Missing Error Handling | Medium | `POST /api/todos` (malformed) |
+| Unhandled Promise | High | `POST /api/chaos/unhandled-promise` |
+| Missing Index | Medium | `GET /api/todos/search?q=term` |
+| Infrastructure Drift | Low | Manual Terraform changes |
+
+See [docs/CHAOS_SCENARIOS.md](docs/CHAOS_SCENARIOS.md) for detailed instructions.
+
+## Monitoring & Alerts
+
+Configured via Terraform:
+- High CPU (>80%) and Memory (>85%) alerts
+- HTTP 5xx error rate alerts
+- Response time degradation (>2s)
+- Email notifications to configured alert email
+
+Dashboards available in Azure Portal → Application Insights.
+
+## Project Structure
+
+```
+${{ values.repoName }}/
+├── frontend/              # React 18 + Vite + Tailwind CSS
+│   └── src/
+│       ├── components/    # React components
+│       ├── pages/         # Route pages
+│       ├── services/      # API service layer
+│       └── api/           # HTTP client (Axios)
+├── backend/               # Node.js 20 + Express + Prisma
+│   ├── src/
+│   │   ├── routes/        # API route handlers
+│   │   ├── middleware/    # Express middleware
+│   │   └── config/        # App config (DB, Redis, AppInsights)
+│   └── prisma/            # Schema + migrations
+├── terraform/             # Azure IaC
+│   └── environments/      # Per-environment tfvars
+├── e2e/                   # Playwright E2E tests
+│   ├── pages/             # Page Object Models
+│   └── tests/             # Test specs
+├── .github/
+│   ├── workflows/         # CI/CD pipelines
+│   ├── agents/            # Copilot custom agents
+│   └── instructions/      # Copilot instructions
+├── .devcontainer/         # Codespaces environment
+├── .vscode/               # VS Code config + MCP servers
+└── docs/                  # Architecture, deployment, chaos guides
+```
+
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [Deployment Guide](docs/DEPLOYMENT.md)
+- [GitHub Setup](docs/GITHUB_SETUP.md)
+- [Chaos Scenarios](docs/CHAOS_SCENARIOS.md)
+- [Copilot Agent Workshop](docs/COPILOT_AGENT_WORKSHOP.md)
+
+## Configuration
+
+| Setting | Value |
+|---------|-------|
+| Environment | ${{ values.environment }} |
+| Azure Region | ${{ values.azure_region }} |
+| Redis | {% if values.enable_redis %}Enabled{% else %}Disabled{% endif %} |
+| Monitoring | {% if values.enable_monitoring %}Enabled{% else %}Disabled{% endif %} |
+| Owner | ${{ values.owner }} |
+| System | ${{ values.system }} |
+
+---
+
+**Built with the Three Horizons Golden Path — Agentic DevOps Platform**

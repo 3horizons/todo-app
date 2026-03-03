@@ -17,7 +17,7 @@ terraform {
   #   resource_group_name  = "terraform-state-rg"
   #   storage_account_name = "tfstate"
   #   container_name       = "tfstate"
-  #   key                  = "sre-demo.terraform.tfstate"
+  #   key                  = "todo-app.terraform.tfstate"
   # }
 }
 

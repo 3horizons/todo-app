@@ -21,7 +21,7 @@ on:
 
 env:
   REGISTRY_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
-  IMAGE_NAME: sre-demo-backend
+  IMAGE_NAME: todo-app-backend
   
 jobs:
   build-and-test:

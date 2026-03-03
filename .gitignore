@@ -94,6 +94,7 @@ jspm_packages/
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
+!.vscode/mcp.json
 *.swp
 *.swo
 *~
@@ -144,6 +145,14 @@ secrets/
 *.cer
 *.crt
 
+# Terraform variable files (may contain secrets)
+*.tfvars
+!terraform.tfvars.example
+
+# Azure deployment artifacts
+deployments/
+LogFiles/
+
 # Backup files
 *.bak
 *.backup
@@ -153,3 +162,4 @@ secrets/
 tmp/
 temp/
 *.tmp
+*.zip

@@ -10,7 +10,7 @@ const logger = winston.createLogger({
     winston.format.splat(),
     winston.format.json()
   ),
-  defaultMeta: { service: 'sre-demo-backend' },
+  defaultMeta: { service: 'todo-app-backend' },
   transports: [
     // Write all logs to console
     new winston.transports.Console({

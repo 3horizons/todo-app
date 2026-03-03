@@ -1,0 +1,184 @@
+# GitHub Configuration Guide
+
+This guide covers all GitHub configurations needed to enable CI/CD, automated deployments, and monitoring for **${{ values.name }}**.
+
+## Required GitHub Secrets
+
+Go to your repository: https://github.com/${{ values.orgName }}/${{ values.repoName }}
+
+Navigate to: **Settings → Secrets and variables → Actions → New repository secret**
+
+### 1. Azure Authentication Secrets
+
+These secrets allow GitHub Actions to authenticate with Azure:
+
+#### `ARM_CLIENT_ID`
+```bash
+az ad sp create-for-rbac --name "${{ values.name }}-terraform" \
+  --role Contributor \
+  --scopes /subscriptions/YOUR_SUBSCRIPTION_ID \
+  --sdk-auth
+# Copy the "clientId" from the output
+```
+
+#### `ARM_CLIENT_SECRET`
+Copy the "clientSecret" from the same command above.
+
+#### `ARM_SUBSCRIPTION_ID`
+```bash
+az account show --query id -o tsv
+```
+
+#### `ARM_TENANT_ID`
+```bash
+az account show --query tenantId -o tsv
+```
+
+#### `AZURE_CREDENTIALS`
+Copy the ENTIRE JSON output from the `az ad sp create-for-rbac` command.
+
+### 2. Database Secrets
+
+#### `POSTGRES_ADMIN_PASSWORD`
+- At least 8 characters
+- Must contain uppercase, lowercase, and numbers
+- Must match the password used in Terraform
+
+### 3. Monitoring Secrets
+
+#### `ALERT_EMAIL`
+- Email address for Azure Monitor alerts
+- You'll receive alerts when chaos scenarios are triggered or thresholds are exceeded
+
+### 4. App Service Secrets (After Terraform)
+
+These become available AFTER deploying infrastructure:
+
+#### `AZURE_WEBAPP_NAME_DEV`
+```bash
+cd terraform && terraform output -raw app_service_name
+```
+
+#### `AZURE_RESOURCE_GROUP`
+Value: `${{ values.name }}-rg`
+
+#### `AZURE_STATIC_WEB_APPS_API_TOKEN`
+```bash
+cd terraform && terraform output -raw static_web_app_api_key
+```
+
+#### `VITE_API_BASE_URL`
+```bash
+cd terraform && terraform output -raw app_service_url
+```
+
+## GitHub Secrets Checklist
+
+```
+Azure Authentication:
+[ ] ARM_CLIENT_ID
+[ ] ARM_CLIENT_SECRET
+[ ] ARM_SUBSCRIPTION_ID
+[ ] ARM_TENANT_ID
+[ ] AZURE_CREDENTIALS
+
+Database:
+[ ] POSTGRES_ADMIN_PASSWORD
+
+Monitoring:
+[ ] ALERT_EMAIL
+
+App Service (after Terraform):
+[ ] AZURE_WEBAPP_NAME_DEV
+[ ] AZURE_RESOURCE_GROUP
+
+Static Web App (after Terraform):
+[ ] AZURE_STATIC_WEB_APPS_API_TOKEN
+[ ] VITE_API_BASE_URL
+```
+
+## Step-by-Step Setup Process
+
+### Phase 1: Initial Azure Setup
+
+1. **Create Azure Service Principal:**
+```bash
+az login
+az account set --subscription "YOUR_SUBSCRIPTION_NAME"
+
+az ad sp create-for-rbac \
+  --name "${{ values.name }}-terraform" \
+  --role Contributor \
+  --scopes /subscriptions/$(az account show --query id -o tsv) \
+  --sdk-auth > azure-credentials.json
+
+cat azure-credentials.json
+```
+
+2. **Add GitHub Secrets (Phase 1):**
+   - ARM_CLIENT_ID, ARM_CLIENT_SECRET, ARM_SUBSCRIPTION_ID, ARM_TENANT_ID
+   - AZURE_CREDENTIALS (entire JSON)
+   - POSTGRES_ADMIN_PASSWORD (choose a strong password)
+   - ALERT_EMAIL (your email)
+   - AZURE_RESOURCE_GROUP (`${{ values.name }}-rg`)
+
+### Phase 2: Deploy Infrastructure
+
+1. **Run Terraform:**
+```bash
+cd terraform
+terraform init
+terraform plan -var-file="environments/${{ values.environment }}.tfvars"
+terraform apply -var-file="environments/${{ values.environment }}.tfvars"
+```
+
+2. **Get outputs:**
+```bash
+terraform output -json > outputs.json
+terraform output app_service_name
+terraform output app_service_url
+terraform output static_web_app_api_key
+```
+
+### Phase 3: Complete GitHub Secrets
+
+3. **Add remaining secrets:**
+   - AZURE_WEBAPP_NAME_DEV (from Terraform output)
+   - AZURE_STATIC_WEB_APPS_API_TOKEN (from Terraform output)
+   - VITE_API_BASE_URL (from Terraform output)
+
+## GitHub Environments Setup
+
+For deployments with approval gates:
+
+### Create Environments
+
+Go to: **Settings → Environments → New environment**
+
+| Environment | Protection Rules |
+|-------------|-----------------|
+| `dev` | None |
+| `staging` | Optional: require reviewers |
+| `production` | Required: 1+ reviewer, wait timer (5 min), protected branches only |
+
+## CI/CD Pipelines
+
+This repository includes 3 deployment pipelines:
+
+### 1. Infrastructure Deploy (`infrastructure-deploy.yml`)
+- **Trigger:** Push to `terraform/**` or manual dispatch
+- **Actions:** `terraform init` → `plan` → approval gate (staging/prod) → `apply`
+
+### 2. Backend Deploy (`backend-deploy.yml`)
+- **Trigger:** Push to `backend/**` on main
+- **Actions:** Build → lint → test → Docker build → push → deploy → health check
+
+### 3. Frontend Deploy (`frontend-deploy.yml`)
+- **Trigger:** Push to `frontend/**` on main
+- **Actions:** Build → lint → deploy to Static Web App
+
+## References
+
+- [GitHub Actions Encrypted Secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions)
+- [Azure Service Principal](https://learn.microsoft.com/en-us/cli/azure/ad/sp)
+- [GitHub Environments](https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-deployments/managing-environments-for-deployment)

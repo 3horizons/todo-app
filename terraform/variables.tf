@@ -21,7 +21,7 @@ variable "resource_group_name" {
 variable "project_name" {
   description = "Project name used for resource naming"
   type        = string
-  default     = "sre-demo"
+  default     = "todo-app"
 }
 
 variable "tags" {
@@ -101,7 +101,7 @@ variable "docker_registry_url" {
 variable "docker_image_name" {
   description = "Docker image name"
   type        = string
-  default     = "your-org/sre-demo-backend"
+  default     = "your-org/todo-app-backend"
 }
 
 variable "docker_image_tag" {
