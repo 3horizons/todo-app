@@ -163,3 +163,6 @@ tmp/
 temp/
 *.tmp
 *.zip
+
+# Agent workspace artifacts
+.testagent/

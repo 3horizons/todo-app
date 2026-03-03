@@ -198,6 +198,7 @@ spec:
       input:
         files:
           - template.yaml
+          - .testagent
 
     # ── Step 3: Publish to GitHub ────────────────────────────────────────
     - id: publish
