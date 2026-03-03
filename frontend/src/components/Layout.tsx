@@ -27,7 +27,7 @@ export default function Layout() {
                 <span className="text-white font-bold text-xl">S</span>
               </div>
               <div>
-                <h1 className="text-white font-bold text-lg">SRE Demo</h1>
+                <h1 className="text-white font-bold text-lg">Todo App</h1>
                 <p className="text-gray-400 text-xs">Task Management Platform</p>
               </div>
             </Link>
@@ -101,7 +101,7 @@ export default function Layout() {
       <footer className="mt-auto border-t border-gray-700 bg-gray-900/30">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between text-sm text-gray-400">
-            <p>© 2025 SRE Demo Platform. Built for Azure demonstrations.</p>
+            <p>© 2025 Todo App Platform. Built with Three Horizons Golden Path.</p>
             <div className="flex items-center space-x-4 mt-4 md:mt-0">
               <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
                 GitHub

@@ -8,7 +8,7 @@ metadata:
     Node.js + Express + Prisma + Redis + Winston (backend), Terraform for Azure infrastructure,
     and Playwright for E2E testing.
 
-    Includes GitHub Codespaces dev environment, 8 Copilot agents, chaos engineering endpoints,
+    Includes GitHub Codespaces dev environment, Copilot custom agents,
     and CI/CD pipelines for Azure deployment.
   tags:
     - react
@@ -20,7 +20,6 @@ metadata:
     - golden-path
     - playwright
     - prisma
-    - sre
   annotations:
     backstage.io/techdocs-ref: dir:.
   links:
@@ -114,11 +113,6 @@ spec:
           type: boolean
           description: Enable Application Insights and Log Analytics
           default: true
-        enable_chaos:
-          title: Enable Chaos Scenarios
-          type: boolean
-          description: Enable SRE chaos engineering endpoints (/api/chaos/*). Recommended for dev environments.
-          default: true
         trigger_infra_plan:
           title: Trigger Infrastructure Plan
           type: boolean
@@ -195,7 +189,6 @@ spec:
           repoName: ${{ (parameters.repoUrl | parseRepoUrl).repo }}
           visibility: ${{ parameters.visibility }}
           trigger_infra_plan: ${{ parameters.trigger_infra_plan }}
-          enable_chaos: ${{ parameters.enable_chaos }}
           branch_protection: ${{ parameters.branch_protection }}
 
     # ── Step 2: Remove template artifacts from output ─────────────────────

@@ -18,10 +18,10 @@
     "prisma:seed": "tsx prisma/seed.ts"
   },
   "keywords": [
-    "sre",
-    "demo",
+    "todo-app",
     "azure",
-    "monitoring"
+    "express",
+    "prisma"
   ],
   "author": "Your Team",
   "license": "MIT",

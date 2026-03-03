@@ -104,7 +104,7 @@ az acr credential show --name sredemoregistry --query passwords[0].value -o tsv
 #### `ALERT_EMAIL`
 - **Description:** Email address for Azure Monitor alerts
 - **Example:** `your-email@example.com`
-- **Note:** You'll receive alerts when chaos scenarios are triggered
+- **Note:** You'll receive alerts when monitoring thresholds are exceeded
 
 ### 5. App Service Secrets
 
@@ -469,8 +469,7 @@ After completing GitHub configuration:
 2. ✅ Environments created
 3. ✅ Branch protection enabled
 4. 📖 Deploy infrastructure: See [DEPLOYMENT.md](./DEPLOYMENT.md)
-5. 📖 Test chaos scenarios: See [CHAOS_SCENARIOS.md](./CHAOS_SCENARIOS.md)
-6. 📖 Set up Azure SRE Agent (separate guide)
+5. 📖 Configure monitoring and alerts
 
 ## Quick Reference Commands
 

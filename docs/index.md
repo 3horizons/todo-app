@@ -19,4 +19,3 @@ Full-stack Todo application built with the Three Horizons Agentic DevOps Platfor
 - [Deployment](DEPLOYMENT.md)
 - [GitHub Setup](GITHUB_SETUP.md)
 - [Copilot Agents](COPILOT_AGENT_WORKSHOP.md)
-- [Chaos Engineering](CHAOS_SCENARIOS.md)

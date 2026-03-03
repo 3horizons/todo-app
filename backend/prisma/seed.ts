@@ -67,8 +67,8 @@ async function main() {
   const projects = await Promise.all([
     prisma.project.create({
       data: {
-        name: 'SRE Platform Migration',
-        description: 'Migrate legacy monitoring to Azure native solutions',
+        name: 'Platform Migration',
+        description: 'Migrate legacy systems to Azure native solutions',
         color: '#3b82f6',
         icon: '🚀',
         status: 'ACTIVE',
@@ -112,7 +112,7 @@ async function main() {
 
   // Create project members
   await Promise.all([
-    // SRE Platform Migration
+    // Platform Migration
     prisma.projectMember.create({
       data: { projectId: projects[0].id, userId: users[0].id, role: 'OWNER' },
     }),

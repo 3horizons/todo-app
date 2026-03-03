@@ -430,11 +430,9 @@ The project includes a `.vscode/mcp.json` configuration for the Playwright MCP s
 Alerts are automatically created by Terraform, but verify they're working:
 
 ```bash
-# Test CPU alert
-curl -X POST $BACKEND_URL/api/chaos/cpu-spike
-
 # Check Azure Portal → Monitor → Alerts
-# Wait 2-3 minutes for alert to fire
+# Verify alert rules are active
+az monitor metrics alert list --resource-group <resource-group>
 ```
 
 ### 3. Set Up Dashboard
@@ -668,9 +666,8 @@ az consumption budget create \
 4. ✅ Verify health checks
 5. ✅ Configure monitoring alerts
 6. ✅ Set up dashboard
-7. 📖 Review [CHAOS_SCENARIOS.md](./CHAOS_SCENARIOS.md) for demo scenarios
-8. 📖 Review [MONITORING.md](./MONITORING.md) for monitoring setup
-9. 📖 Review [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for common issues
+7. 📖 Review [DEPLOYMENT.md](./DEPLOYMENT.md) for deployment details
+8. 📖 Review [ARCHITECTURE.md](./ARCHITECTURE.md) for architecture details
 
 ## Support
 

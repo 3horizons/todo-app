@@ -1,6 +1,6 @@
 # GitHub Copilot Agent Mode & Coding Agent Workshop Guide
 
-This document provides **validated prompts** based on the actual SRE Demo project implementation. All tasks are mapped to existing code, APIs, and infrastructure components.
+This document provides **validated prompts** based on the actual Todo App project implementation. All tasks are mapped to existing code, APIs, and infrastructure components.
 
 ---
 
@@ -8,8 +8,7 @@ This document provides **validated prompts** based on the actual SRE Demo projec
 
 1. [Project Overview - What's Already Implemented](#1-project-overview---whats-already-implemented)
 2. [Codebase Exploration](#2-codebase-exploration)
-3. [Debugging Intentional Bugs (Chaos Engineering)](#3-debugging-intentional-bugs-chaos-engineering)
-4. [Database & Schema Operations](#4-database--schema-operations)
+3. [Database & Schema Operations](#4-database--schema-operations)
 5. [API Development & Enhancement](#5-api-development--enhancement)
 6. [Frontend Development](#6-frontend-development)
 7. [Testing & Quality](#7-testing--quality)
@@ -43,7 +42,6 @@ This document provides **validated prompts** based on the actual SRE Demo projec
 | `/api/todos/search` | GET | Search todos |
 | `/api/users` | GET, POST | User management |
 | `/api/projects` | GET, POST | Project management |
-| `/api/chaos/*` | POST | Chaos engineering endpoints |
 | `/api/health` | GET | Health check |
 
 ### Existing Frontend Pages
@@ -61,14 +59,7 @@ This document provides **validated prompts** based on the actual SRE Demo projec
 ### Intentional Bugs for Demo
 | Scenario | Trigger | Location |
 |----------|---------|----------|
-| N+1 Query | `GET /api/todos?inefficient=true` | todoRoutes.ts |
-| Cache Invalidation Bug | `PUT /api/todos/:id?skipCache=true` | todoRoutes.ts |
 | Missing DB Index | `GET /api/todos/search?q=...` | schema.prisma (commented) |
-| Memory Leak | `POST /api/chaos/memory-leak/trigger` | chaosRoutes.ts |
-| CPU Spike | `POST /api/chaos/cpu-spike` | chaosRoutes.ts |
-| Pool Exhaustion | `POST /api/chaos/exhaust-pool` | chaosRoutes.ts |
-| Unhandled Promise | `POST /api/chaos/unhandled-promise` | chaosRoutes.ts |
-| DB Timeout | `POST /api/chaos/db-timeout` | chaosRoutes.ts |
 
 ---
 
@@ -76,7 +67,7 @@ This document provides **validated prompts** based on the actual SRE Demo projec
 
 ### Understanding the Architecture
 ```
-"Explain the architecture of this SRE Demo project"
+"Explain the architecture of this Todo App project"
 
 "What is the relationship between Todo, User, and Project models in the Prisma schema?"
 
@@ -89,7 +80,7 @@ This document provides **validated prompts** based on the actual SRE Demo projec
 
 ### Finding Specific Code
 ```
-"Find all the intentional bugs in this codebase for chaos engineering demos"
+"Find all the intentional bugs in this codebase and suggest fixes"
 
 "Where is the N+1 query problem implemented and how do I trigger it?"
 
@@ -109,59 +100,6 @@ This document provides **validated prompts** based on the actual SRE Demo projec
 "Analyze the error handling strategy in middleware/errorHandler.ts"
 
 "Review the Prisma schema for missing indexes that could impact performance"
-```
-
----
-
-## 3. Debugging Intentional Bugs (Chaos Engineering)
-
-### Diagnose and Fix N+1 Query Problem
-```
-"The GET /api/todos endpoint is slow when inefficient=true is passed. 
-Analyze the N+1 query problem in todoRoutes.ts and show me the fix."
-
-"Compare the performance difference between the efficient and inefficient 
-query patterns in the todos endpoint"
-
-"Find all N+1 query patterns in the codebase and suggest optimizations"
-```
-
-### Fix Cache Invalidation Bug
-```
-"There's a cache invalidation bug in the PUT /api/todos/:id endpoint 
-when skipCache=true is passed. Explain the issue and implement the fix."
-
-"How should cache invalidation be properly handled in this application?"
-
-"Add proper cache invalidation strategy for all CRUD operations on todos"
-```
-
-### Fix Missing Database Indexes
-```
-"The /api/todos/search endpoint is doing a full table scan. 
-Add the missing indexes to the Prisma schema and create a migration."
-
-"Review the Prisma schema and add appropriate indexes for common queries"
-
-"Explain why the search endpoint is slow and implement database-level optimization"
-```
-
-### Analyze Memory Leak
-```
-"Analyze the memory leak implementation in chaosRoutes.ts and explain:
-1. Why it causes memory to grow
-2. How to detect it in production
-3. How to fix it"
-
-"What Application Insights queries would help detect this memory leak in production?"
-```
-
-### Fix Error Handling
-```
-"The POST /api/todos endpoint may expose sensitive information on error.
-Review and implement proper error handling without information leakage."
-
-"Add proper error sanitization to prevent stack traces from reaching clients"
 ```
 
 ---
@@ -332,8 +270,6 @@ Then generate the migration"
 "Create tests that verify the N+1 query fix works correctly"
 
 "Test the rate limiting middleware with concurrent requests"
-
-"Write tests for the chaos endpoints verifying they trigger expected behaviors"
 ```
 
 ### Test Infrastructure
@@ -443,7 +379,7 @@ Then generate the migration"
 
 "Create a Log Analytics query to find slow database queries"
 
-"Set up Azure Monitor dashboard for the SRE Demo application"
+"Set up Azure Monitor dashboard for the Todo App application"
 ```
 
 ### Security & Compliance
@@ -477,8 +413,6 @@ Then generate the migration"
 "Create a GitHub Action that comments on PRs with test coverage changes"
 
 "Add a workflow that automatically creates issues for failed deployments"
-
-"Create a scheduled workflow that runs chaos tests daily"
 
 "Implement branch protection rules via GitHub API"
 ```
@@ -560,7 +494,7 @@ Then generate the migration"
 
 #### Demo 1: Explore and Explain
 ```
-"Explain the complete architecture of this SRE Demo project, including:
+"Explain the complete architecture of this Todo App project, including:
 - How the backend is structured
 - What databases are used
 - How caching works
@@ -691,42 +625,13 @@ Then verify each fix works correctly"
 
 ## Quick Reference: API Endpoints
 
-### Chaos Engineering (for demos)
-```bash
-# Enable memory leak
-curl -X POST http://localhost:3000/api/chaos/memory-leak/enable
-
-# Trigger memory leak
-curl -X POST http://localhost:3000/api/chaos/memory-leak/trigger
-
-# Disable and cleanup
-curl -X POST http://localhost:3000/api/chaos/memory-leak/disable
-
-# Trigger CPU spike (30 seconds)
-curl -X POST http://localhost:3000/api/chaos/cpu-spike?duration=30000
-
-# Get chaos status
-curl http://localhost:3000/api/chaos/status
-
-# Reset all chaos
-curl -X POST http://localhost:3000/api/chaos/reset
-```
-
 ### Normal Operations
 ```bash
-# Get todos (efficient)
+# Get todos
 curl http://localhost:3000/api/todos
 
-# Get todos (N+1 bug)
-curl "http://localhost:3000/api/todos?inefficient=true"
-
-# Search todos (slow - missing index)
+# Search todos
 curl "http://localhost:3000/api/todos/search?q=test"
-
-# Update with cache bug
-curl -X PUT http://localhost:3000/api/todos/[id]?skipCache=true \
-  -H "Content-Type: application/json" \
-  -d '{"title": "Updated"}'
 
 # Health check
 curl http://localhost:3000/api/health
@@ -739,7 +644,6 @@ curl http://localhost:3000/api/health
 - [GitHub Copilot Docs](https://docs.github.com/en/copilot)
 - [VS Code Copilot Chat](https://code.visualstudio.com/docs/copilot/copilot-chat)
 - [Project Docs: Architecture](./ARCHITECTURE.md)
-- [Project Docs: Chaos Scenarios](./CHAOS_SCENARIOS.md)
 - [Project Docs: Deployment](./DEPLOYMENT.md)
 
 ---

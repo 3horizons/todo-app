@@ -31,13 +31,10 @@ const updateTodoSchema = z.object({
 /**
  * GET /api/todos
  * List all todos with optional filters
- * 
- * SCENARIO 2: N+1 Query Problem
- * When inefficient=true, demonstrates N+1 query issue
  */
 router.get('/', async (req: Request, res: Response) => {
   const startTime = Date.now();
-  const { completed, priority, inefficient } = req.query;
+  const { completed, priority } = req.query;
 
   // Build filter
   const where: any = {};
@@ -57,51 +54,6 @@ router.get('/', async (req: Request, res: Response) => {
       logger.debug('Returning cached todos');
       trackMetric('cache_hit', 1);
       return res.json(cached);
-    }
-
-    // SCENARIO 2: N+1 Query Problem (INTENTIONAL BUG)
-    if (inefficient === 'true') {
-      logger.warn('🔥 CHAOS: Using inefficient N+1 query pattern');
-      trackEvent('ChaosTriggered', { scenario: 'n-plus-one' });
-
-      // BAD: Fetch todos without relations
-      const todos = await prisma.todo.findMany({ where });
-
-      // BAD: Make separate query for each todo's metadata (N+1 problem!)
-      const todosWithMetadata = [];
-      for (const todo of todos) {
-        const metadata = await prisma.todoMetadata.findUnique({
-          where: { todoId: todo.id },
-        });
-        
-        const tags = await prisma.tag.findMany({
-          where: {
-            todos: {
-              some: { id: todo.id },
-            },
-          },
-        });
-
-        todosWithMetadata.push({
-          ...todo,
-          metadata,
-          tags,
-        });
-      }
-
-      const duration = Date.now() - startTime;
-      logger.warn(`N+1 query took ${duration}ms for ${todos.length} todos`);
-      trackMetric('query_duration_ms', duration);
-
-      return res.json({
-        todos: todosWithMetadata,
-        count: todosWithMetadata.length,
-        performance: {
-          duration: `${duration}ms`,
-          queriesExecuted: todos.length + 1 + (todos.length * 2),
-          warning: 'N+1 query pattern detected',
-        },
-      });
     }
 
     // GOOD: Efficient query with proper joins
@@ -321,13 +273,9 @@ router.post('/', async (req: Request, res: Response) => {
 /**
  * PUT /api/todos/:id
  * Update a todo
- * 
- * SCENARIO 8: Cache Invalidation Bug
- * When skipCache=true, updates database but doesn't invalidate cache
  */
 router.put('/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { skipCache } = req.query;
 
   try {
     // Validate input
@@ -352,17 +300,10 @@ router.put('/:id', async (req: Request, res: Response) => {
       },
     });
 
-    // SCENARIO 8: Cache Invalidation Bug (INTENTIONAL BUG)
-    if (skipCache !== 'true') {
-      // GOOD: Properly invalidate cache
-      await cache.del(`todo:${id}`);
-      await cache.delPattern('todos:list:*');
-      logger.debug(`Cache invalidated for todo ${id}`);
-    } else {
-      // BAD: Update database but don't invalidate cache
-      logger.warn(`🔥 CHAOS: Cache not invalidated for todo ${id} - stale data will be served`);
-      trackEvent('ChaosTriggered', { scenario: 'cache-invalidation-bug' });
-    }
+    // Invalidate cache
+    await cache.del(`todo:${id}`);
+    await cache.delPattern('todos:list:*');
+    logger.debug(`Cache invalidated for todo ${id}`);
 
     trackEvent('TodoUpdated', { todoId: id });
     logger.info(`Todo updated: ${id}`);

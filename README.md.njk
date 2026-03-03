@@ -88,13 +88,12 @@ cd frontend && npm run dev
 
 ## Copilot Agents
 
-This project includes 8 specialized GitHub Copilot custom agents:
+This project includes specialized GitHub Copilot custom agents:
 
 | Agent | Command | Description |
 |-------|---------|-------------|
 | @todo-dev | `@todo-dev "Add priority field to todos"` | Full-stack app development (React + Express + Prisma) |
 | @todo-deploy | `@todo-deploy "Deploy to Azure dev"` | Terraform, GitHub Actions, Azure deployment |
-| @todo-sre | `@todo-sre "Trigger memory leak scenario"` | SRE, chaos engineering, monitoring, alerts |
 | @playwright-tester | `@playwright-tester "Generate tests for Todos"` | Orchestrates full E2E test pipeline |
 | @playwright-explorer | `@playwright-explorer "Explore Dashboard"` | Navigates app via Playwright MCP |
 | @playwright-planner | `@playwright-planner "Create test plan"` | Generates phased test plans |
@@ -104,7 +103,7 @@ This project includes 8 specialized GitHub Copilot custom agents:
 ### Agent Pipeline
 
 ```
-@todo-dev (write feature) → @playwright-tester (test it) → @todo-deploy (ship it) → @todo-sre (monitor it)
+@todo-dev (write feature) → @playwright-tester (test it) → @todo-deploy (ship it)
 ```
 
 ## E2E Testing
@@ -156,25 +155,6 @@ Push to `main` branch — CI/CD pipelines deploy automatically:
 - `backend-deploy.yml` → builds Docker image → deploys to App Service
 - `frontend-deploy.yml` → builds Vite → deploys to Static Web App
 
-## Chaos Engineering
-
-10 intentional scenarios for SRE testing and demonstration:
-
-| Scenario | Severity | Trigger |
-|----------|----------|---------|
-| Memory Leak | High | `POST /api/chaos/memory-leak` |
-| N+1 Query | Medium | `GET /api/todos?inefficient=true` |
-| Connection Pool Exhaustion | Critical | `POST /api/chaos/exhaust-pool` |
-| CPU Spike | Critical | `POST /api/chaos/cpu-spike` |
-| Database Timeout | High | `POST /api/chaos/db-timeout` |
-| Cache Invalidation Bug | Medium | `PUT /api/todos/:id?skipCache=true` |
-| Missing Error Handling | Medium | `POST /api/todos` (malformed) |
-| Unhandled Promise | High | `POST /api/chaos/unhandled-promise` |
-| Missing Index | Medium | `GET /api/todos/search?q=term` |
-| Infrastructure Drift | Low | Manual Terraform changes |
-
-See [docs/CHAOS_SCENARIOS.md](docs/CHAOS_SCENARIOS.md) for detailed instructions.
-
 ## Monitoring & Alerts
 
 Configured via Terraform:
@@ -212,7 +192,7 @@ ${{ values.repoName }}/
 │   └── instructions/      # Copilot instructions
 ├── .devcontainer/         # Codespaces environment
 ├── .vscode/               # VS Code config + MCP servers
-└── docs/                  # Architecture, deployment, chaos guides
+└── docs/                  # Architecture, deployment guides
 ```
 
 ## Documentation
@@ -220,7 +200,6 @@ ${{ values.repoName }}/
 - [Architecture](docs/ARCHITECTURE.md)
 - [Deployment Guide](docs/DEPLOYMENT.md)
 - [GitHub Setup](docs/GITHUB_SETUP.md)
-- [Chaos Scenarios](docs/CHAOS_SCENARIOS.md)
 - [Copilot Agent Workshop](docs/COPILOT_AGENT_WORKSHOP.md)
 
 ## Configuration

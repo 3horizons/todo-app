@@ -11,7 +11,6 @@ Full-stack Todo application built with modern web technologies and Azure cloud i
 - **Infrastructure**: Terraform + Azure (PostgreSQL, Redis, App Service, Static Web App, App Insights)
 - **Testing**: Playwright with Page Object Model pattern
 - **CI/CD**: GitHub Actions (3 workflows)
-- **Chaos Engineering**: 10 intentional scenarios for SRE demos
 
 ## Key Conventions
 
@@ -76,7 +75,6 @@ e2e/                   # Playwright E2E tests
 | `@azure-infrastructure` | Azure resource management |
 | `@todo-dev` | Full-stack application development |
 | `@todo-deploy` | Deployment orchestration |
-| `@todo-sre` | SRE, monitoring, and chaos engineering |
 
 ## Security Rules
 

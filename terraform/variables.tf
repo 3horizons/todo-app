@@ -28,9 +28,9 @@ variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)
   default = {
-    Project     = "SRE Demo"
+    Project     = "Todo App"
     ManagedBy   = "Terraform"
-    Purpose     = "Azure SRE Agent Demonstration"
+    Purpose     = "Full-stack Todo Application with Azure Monitoring"
   }
 }
 

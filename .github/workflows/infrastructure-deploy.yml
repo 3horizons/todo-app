@@ -223,8 +223,8 @@ jobs:
                - Update Terraform code to match desired state
                - Run \`terraform apply\` to restore Terraform state
             
-            ### Related Scenario
-            This corresponds to **Scenario 10: Infrastructure Drift** in the chaos scenarios.
+            ### Related Information
+            This drift was detected by the Infrastructure Drift Detection workflow.
             
             ---
             *This issue was automatically created by the Infrastructure Drift Detection workflow.*`;

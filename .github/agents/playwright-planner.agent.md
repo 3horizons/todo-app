@@ -2,7 +2,7 @@
 name: "Playwright Test Planner"
 description: "Creates structured E2E test plans from exploration findings. Organizes tests into phases by priority, defines Page Objects, and specifies API mocks."
 tools: ["codebase", "search", "editFiles"]
-model: Claude Sonnet 4
+
 ---
 
 # Playwright Test Planner

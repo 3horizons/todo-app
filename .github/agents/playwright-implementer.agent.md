@@ -2,7 +2,7 @@
 name: "Playwright Test Implementer"
 description: "Implements a single phase from the E2E test plan. Creates Page Objects and test specs with API mocks. Runs tests and fixes failures."
 tools: ["editFiles", "runCommands", "runTests", "search", "codebase", "terminalLastCommand", "testFailure", "problems"]
-model: Claude Sonnet 4
+
 ---
 
 # Playwright Test Implementer

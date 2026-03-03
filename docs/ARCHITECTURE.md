@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the architecture of the Azure SRE Demo application, a full-stack Todo application designed to demonstrate Azure monitoring, alerting, SRE Agent capabilities through intentional chaos engineering scenarios, and AI-powered end-to-end testing with GitHub Copilot custom agents.
+This document describes the architecture of the Todo App, a full-stack application with Azure infrastructure, monitoring, and AI-powered end-to-end testing with GitHub Copilot custom agents.
 
 ## Architecture Diagram
 
@@ -29,13 +29,6 @@ This document describes the architecture of the Azure SRE Demo application, a fu
 │  │           Azure App Service (Backend API)                │  │
 │  │      Node.js + Express + TypeScript + Prisma             │  │
 │  │                                                            │  │
-│  │  ┌─────────────────────────────────────────────────────┐ │  │
-│  │  │          Chaos Engineering Endpoints                 │ │  │
-│  │  │  /api/chaos/memory-leak                             │ │  │
-│  │  │  /api/chaos/cpu-spike                               │ │  │
-│  │  │  /api/chaos/connection-pool                         │ │  │
-│  │  │  /api/chaos/unhandled-promise                       │ │  │
-│  │  └─────────────────────────────────────────────────────┘ │  │
 │  └──────────────────────────────────────────────────────────┘  │
 │           │                    │                    │           │
 │           ▼                    ▼                    ▼           │
@@ -74,7 +67,7 @@ This document describes the architecture of the Azure SRE Demo application, a fu
 │  │              Monitor Action Group                        │  │
 │  │                                                            │  │
 │  │  - Email notifications                                    │  │
-│  │  - Creates GitHub Issues (via Azure SRE Agent)           │  │
+│  │  - Creates GitHub Issues (via Azure Monitor)            │  │
 │  │  - Triggers automated remediation                         │  │
 │  └──────────────────────────────────────────────────────────┘  │
 │                                                                   │
@@ -103,7 +96,6 @@ This document describes the architecture of the Azure SRE Demo application, a fu
 - Render todo list UI
 - Handle user interactions (create, update, delete, toggle)
 - Filter todos by status and priority
-- Trigger chaos scenarios for demonstration
 - Display real-time updates
 
 **Key Features:**
@@ -132,7 +124,6 @@ This document describes the architecture of the Azure SRE Demo application, a fu
 
 **Responsibilities:**
 - RESTful API for todo operations
-- Chaos engineering endpoints
 - Health check endpoints
 - Request/response logging
 - Error handling and monitoring
@@ -141,19 +132,12 @@ This document describes the architecture of the Azure SRE Demo application, a fu
 **API Endpoints:**
 
 **Todo Management:**
-- `GET /api/todos` - List all todos (with optional inefficient mode)
+- `GET /api/todos` - List all todos
 - `POST /api/todos` - Create new todo
 - `GET /api/todos/:id` - Get single todo
-- `PATCH /api/todos/:id` - Update todo (with optional cache skip)
+- `PATCH /api/todos/:id` - Update todo
 - `DELETE /api/todos/:id` - Delete todo
 - `PATCH /api/todos/:id/toggle` - Toggle completion status
-
-**Chaos Engineering:**
-- `POST /api/chaos/memory-leak` - Trigger memory leak
-- `POST /api/chaos/cpu-spike` - Trigger CPU spike
-- `POST /api/chaos/connection-pool` - Exhaust connection pool
-- `POST /api/chaos/unhandled-promise` - Trigger unhandled promise
-- `POST /api/chaos/db-timeout` - Cause database timeout
 
 **Health Checks:**
 - `GET /api/health` - Basic health check
@@ -596,14 +580,7 @@ npx playwright show-report                 # View HTML report
 3. **Business Metrics**
    - Todos created (count)
    - Todos completed (count)
-   - Active chaos scenarios
    - Alert frequency
-
-4. **Chaos Engineering**
-   - Memory leak progress
-   - CPU spike occurrences
-   - Connection pool status
-   - Unhandled errors count
 
 ## References
 
