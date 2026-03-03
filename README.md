@@ -1,335 +1,224 @@
-# 🚀 Azure SRE Agent Demo - Full Stack Todo Platform
+# Todo App — Three Horizons Golden Path
 
-A comprehensive demonstration platform showcasing Azure SRE Agent capabilities with intentional chaos scenarios, complete monitoring, and automated incident response.
+Full-stack Todo application template for the **Three Horizons Agentic DevOps Platform**, built with React 18 + Node.js + TypeScript + Terraform + Azure.
 
-## 📋 Table of Contents
+This repository serves as a **Golden Path template** for Red Hat Developer Hub (RHDH). When selected in the RHDH portal, it scaffolds a complete Todo application with Azure infrastructure, CI/CD pipelines, Codespaces environment, and Copilot custom agents.
 
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Tech Stack](#tech-stack)
-- [Prerequisites](#prerequisites)
-- [Quick Start](#quick-start)
-- [E2E Testing](#-e2e-testing)
-- [Copilot Agents](#-copilot-agents)
-- [Chaos Scenarios](#chaos-scenarios)
-- [Monitoring & Alerts](#monitoring--alerts)
-- [CI/CD Pipeline](#cicd-pipeline)
-- [Contributing](#contributing)
-
-## 🎯 Overview
-
-This repository demonstrates:
-- ✅ Full-stack Todo application (React + Node.js + TypeScript)
-- ✅ Infrastructure as Code with Terraform
-- ✅ Comprehensive Azure monitoring and alerting
-- ✅ GitHub Actions CI/CD pipelines
-- ✅ Intentional bugs and chaos scenarios for SRE Agent demonstration
-- ✅ Automated issue creation and resolution workflows
-- ✅ End-to-end testing with Playwright and AI-powered test agents
-- ✅ Copilot custom agents for automated test generation and execution
-
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────┐
-│  React Frontend │
-│  (Static Web)   │
-└────────┬────────┘
+│  React Frontend  │
+│  (Static Web)    │
+└────────┬─────────┘
          │
          ▼
 ┌─────────────────┐      ┌──────────────┐
-│  Express API    │◄────►│  PostgreSQL  │
-│  (App Service)  │      │  (Flexible)  │
-└────────┬────────┘      └──────────────┘
+│  Express API     │◄────►│  PostgreSQL   │
+│  (App Service)   │      │  (Flexible)   │
+└────────┬─────────┘      └──────────────┘
          │
          ▼
 ┌─────────────────┐      ┌──────────────┐
-│  Redis Cache    │      │  App Insights│
-│                 │      │  + Monitoring│
+│  Redis Cache     │      │  App Insights │
+│                  │      │  + Monitoring  │
 └─────────────────┘      └──────────────┘
 ```
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-### Frontend
-- **React 18** with TypeScript
-- **Vite** for build tooling
-- **Tailwind CSS** for styling
-- **React Query (TanStack Query)** for data fetching
-- **Axios** for HTTP client
-- **Azure Static Web Apps** for hosting
+| Layer | Technology | Hosting |
+|-------|-----------|---------|
+| Frontend | React 18 + TypeScript + Vite + Tailwind CSS + React Query | Azure Static Web Apps |
+| Backend | Node.js 20 + Express + Prisma ORM + Redis + Winston | Azure App Service |
+| Database | PostgreSQL 16 | Azure Database for PostgreSQL Flexible Server |
+| Cache | Redis 7 | Azure Cache for Redis |
+| IaC | Terraform | AzureRM Provider |
+| CI/CD | GitHub Actions | 3 pipelines (frontend, backend, infrastructure) |
+| Testing | Playwright | E2E with Page Object Model |
+| Monitoring | Application Insights + Log Analytics | Azure Monitor |
 
-### Backend
-- **Node.js 20** with Express
-- **TypeScript** for type safety
-- **Prisma ORM** for database access
-- **Redis** for caching
-- **Winston** for logging
-- **Azure App Service / Container Apps**
+## Quick Start
 
-### Infrastructure
-- **Azure Database for PostgreSQL Flexible Server**
-- **Azure Cache for Redis**
-- **Azure Application Insights**
-- **Azure Key Vault**
-- **Azure Monitor & Log Analytics**
-- **Terraform** for IaC
+### Option 1: GitHub Codespaces (Recommended)
 
-### Testing
-- **Playwright** for end-to-end browser testing
-- **Playwright MCP** for visual exploration and test generation
-- **Page Object Model** pattern for maintainable tests
-- **API mocking** with `page.route()` for deterministic tests
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/3horizons/todo-app?quickstart=1)
 
-### DevOps
-- **GitHub Actions** for CI/CD
-- **Docker** for containerization
-- **Azure CLI** for deployment
-- **Terraform Cloud** (optional)
+The Codespace will automatically:
+- Install all dependencies (frontend, backend, e2e)
+- Start PostgreSQL and Redis containers
+- Run database migrations
+- Configure MCP servers for Copilot agents
 
-## 📦 Prerequisites
-
-- **Node.js 20+** and npm/yarn
-- **Docker** and Docker Compose
-- **Terraform 1.5+**
-- **Azure CLI** 2.50+
-- **Azure Subscription** with contributor access
-- **GitHub Account** with Actions enabled
-
-## 🚀 Quick Start
-
-### 1. Clone the Repository
-
+Then open two terminals:
 ```bash
-git clone https://github.com/your-org/sre-demo.git
-cd sre-demo
+# Terminal 1 — Backend
+cd backend && npm run dev
+
+# Terminal 2 — Frontend
+cd frontend && npm run dev
 ```
 
-### 2. Local Development Setup
+- Frontend: http://localhost:5173
+- Backend: http://localhost:3000
+
+### Option 2: Local Development
 
 ```bash
-# Install dependencies for both frontend and backend
-cd frontend && npm install
-cd ../backend && npm install
+# Clone
+git clone https://github.com/3horizons/todo-app.git
+cd todo-app
 
-# Start local infrastructure (PostgreSQL + Redis)
-docker-compose up -d
+# Install dependencies
+cd frontend && npm install && cd ..
+cd backend && npm install && cd ..
 
-# Run database migrations
-cd backend
-npm run prisma:migrate
+# Start infrastructure
+docker-compose -f docker-compose.dev.yml up -d postgres redis
+
+# Run migrations
+cd backend && npx prisma migrate dev && cd ..
 
 # Start backend (terminal 1)
-npm run dev
+cd backend && npm run dev
 
 # Start frontend (terminal 2)
-cd ../frontend
-npm run dev
+cd frontend && npm run dev
 ```
 
-Frontend: http://localhost:5173  
-Backend: http://localhost:3000
+## Copilot Agents
 
-### 3. Infrastructure Deployment
+This project includes specialized GitHub Copilot custom agents:
 
-```bash
-# Login to Azure
-az login
-
-# Initialize Terraform
-cd terraform/environments/dev
-terraform init
-
-# Plan infrastructure
-terraform plan -out=tfplan
-
-# Apply infrastructure
-terraform apply tfplan
-```
-
-### 4. Configure GitHub Secrets
-
-Required secrets for GitHub Actions:
-- `AZURE_CREDENTIALS`
-- `AZURE_SUBSCRIPTION_ID`
-- `AZURE_RESOURCE_GROUP`
-- `DATABASE_URL`
-- `REDIS_CONNECTION_STRING`
-
-## 🧪 E2E Testing
-
-This project includes a comprehensive end-to-end testing infrastructure powered by **Playwright** and **Copilot custom agents**.
-
-### Quick Start
-
-```bash
-# Install Playwright (one-time setup)
-cd e2e && npm install && npx playwright install chromium
-
-# Run all E2E tests
-npm run test:e2e
-
-# Run tests with UI mode (interactive)
-npm run test:e2e:ui
-
-# Run tests in headed browser
-npm run test:e2e:headed
-```
-
-### Test Structure
-
-```
-e2e/
-  playwright.config.ts    # Playwright configuration (chromium + mobile)
-  pages/                  # Page Object Models
-  tests/                  # Test spec files
-  fixtures/               # Shared mock data and setup
-```
-
-### Testing Approach
-
-- **API Mocking**: All tests use `page.route()` to mock API calls — no backend required
-- **Page Object Model**: Each page has a dedicated POM class for maintainability
-- **Accessible Selectors**: Tests use `getByRole()`, `getByText()`, `getByPlaceholder()` over CSS selectors
-- **Multi-viewport**: Tests run on both desktop Chrome and mobile (iPhone 13) viewports
-- **Deterministic**: Mocked API responses ensure consistent, reliable test results
-
-### Test Coverage
-
-| Page | Tests | Coverage |
-|------|-------|----------|
-| Navigation & Layout | Menu, routing, mobile menu, redirects | Core |
-| Dashboard | Stats cards, links, priority breakdown | Core |
-| Todos | CRUD via modal, search, filters, toggle | Full |
-| Projects | List, create, detail view, members | Full |
-| Users | List, search, filter, detail view | Full |
-
-See [E2E Testing Instructions](.github/instructions/e2e-testing.instructions.md) for conventions and best practices.
-
-## 🤖 Copilot Agents
-
-This project includes specialized **GitHub Copilot custom agents** for automated test generation and infrastructure management.
-
-### Testing Agents
-
-| Agent | Description | Usage |
-|-------|-------------|-------|
-| **Playwright E2E Tester** | Orchestrates the full test pipeline: explore → plan → implement → run | `@playwright-tester "Generate tests for Todos page"` |
-| **Playwright Explorer** | Navigates the app via Playwright MCP, documents elements and flows | `@playwright-explorer "Explore the Dashboard"` |
-| **Playwright Test Planner** | Creates phased test plans from exploration findings | `@playwright-planner "Create test plan"` |
-| **Playwright Test Implementer** | Writes Page Objects and test specs, runs and fixes until passing | `@playwright-implementer "Implement Phase 3"` |
-
-### Infrastructure Agent
-
-| Agent | Description |
-|-------|-------------|
-| **Azure Infrastructure Expert** | Azure IaC, monitoring, troubleshooting, and optimization guidance |
+| Agent | Command | Description |
+|-------|---------|-------------|
+| @todo-dev | `@todo-dev "Add priority field to todos"` | Full-stack app development (React + Express + Prisma) |
+| @todo-deploy | `@todo-deploy "Deploy to Azure dev"` | Terraform, GitHub Actions, Azure deployment |
+| @playwright-tester | `@playwright-tester "Generate tests for Todos"` | Orchestrates full E2E test pipeline |
+| @playwright-explorer | `@playwright-explorer "Explore Dashboard"` | Navigates app via Playwright MCP |
+| @playwright-planner | `@playwright-planner "Create test plan"` | Generates phased test plans |
+| @playwright-implementer | `@playwright-implementer "Implement Phase 1"` | Writes Page Objects + test specs |
+| @azure | `@azure "Check App Service health"` | Azure IaC, monitoring, troubleshooting |
 
 ### Agent Pipeline
 
 ```
-User invokes @playwright-tester
-  │
-  ├─► @playwright-explorer  →  Navigates site, documents in .testagent/exploration.md
-  │
-  ├─► @playwright-planner   →  Reads exploration + source, generates .testagent/e2e-plan.md
-  │
-  └─► @playwright-implementer (per phase)
-        ├─ Creates e2e/pages/*.page.ts (Page Objects)
-        ├─ Creates e2e/tests/*.spec.ts (with API mocks)
-        ├─ Runs npx playwright test
-        └─ Fixes failures (up to 3 retries)
+@todo-dev (write feature) → @playwright-tester (test it) → @todo-deploy (ship it)
 ```
 
-Agent files are located in [`.github/agents/`](.github/agents/).
+## E2E Testing
 
-## 🔥 Chaos Scenarios
+```bash
+cd e2e && npm install && npx playwright install chromium
 
-This repository includes intentional bugs and performance issues for demonstration purposes. See [docs/CHAOS_SCENARIOS.md](docs/CHAOS_SCENARIOS.md) for detailed trigger instructions.
+# Run all tests
+npx playwright test
 
-### Available Scenarios
+# Run with UI mode
+npx playwright test --ui
+```
 
-| Scenario | Type | Severity | Trigger |
-|----------|------|----------|---------|
-| Memory Leak | Performance | High | `POST /api/chaos/memory-leak` |
-| N+1 Query Problem | Performance | Medium | `GET /api/todos?inefficient=true` |
-| Missing Index | Performance | Medium | `GET /api/todos/search?q=term` |
-| Connection Pool Exhaustion | Availability | Critical | `POST /api/chaos/exhaust-pool` |
-| Unhandled Promise Rejection | Reliability | High | `POST /api/chaos/unhandled-promise` |
-| CPU Intensive Loop | Performance | Critical | `POST /api/chaos/cpu-spike` |
-| Database Timeout | Availability | High | `POST /api/chaos/db-timeout` |
-| Cache Invalidation Bug | Data Integrity | Medium | `PUT /api/todos/:id?skipCache=true` |
-| Missing Error Handling | Reliability | Medium | `POST /api/todos` (malformed data) |
-| Infrastructure Drift | Configuration | Low | Manual Terraform changes |
+## Infrastructure Deployment
 
-## 📊 Monitoring & Alerts
+### 1. Configure Azure Secrets
 
-### Configured Alerts
+Add these secrets to **Settings → Secrets and variables → Actions**:
 
-- ⚠️ **High CPU Usage** (>80% for 5 minutes)
-- ⚠️ **High Memory Usage** (>85% for 5 minutes)
-- ⚠️ **Error Rate Spike** (>5% of requests)
-- ⚠️ **Response Time Degradation** (>2s average)
-- ⚠️ **Database Connection Issues**
-- ⚠️ **Failed Deployments**
-- ⚠️ **Infrastructure Drift Detected**
+| Secret | Description |
+|--------|-------------|
+| `ARM_CLIENT_ID` | Azure Service Principal App ID |
+| `ARM_CLIENT_SECRET` | Azure Service Principal Secret |
+| `ARM_SUBSCRIPTION_ID` | Azure Subscription ID |
+| `ARM_TENANT_ID` | Azure Tenant ID |
+| `POSTGRES_ADMIN_PASSWORD` | PostgreSQL admin password |
+| `ALERT_EMAIL` | Email for monitoring alerts |
 
-### Dashboards
+### 2. Deploy Infrastructure
 
-- Application Performance (Application Insights)
-- Infrastructure Health (Azure Monitor)
-- Database Performance (PostgreSQL Insights)
-- Cache Metrics (Redis Insights)
+```bash
+# Via GitHub Actions (recommended)
+gh workflow run infrastructure-deploy.yml -f action=apply -f environment=dev
 
-## 🔄 CI/CD Pipeline
+# Or manually
+cd terraform
+terraform init
+terraform plan -var-file=environments/dev.tfvars
+terraform apply -var-file=environments/dev.tfvars
+```
 
-### Workflows
+### 3. Deploy Application
 
-1. **Frontend Deployment** (`.github/workflows/frontend-deploy.yml`)
-   - Build React application
-   - Run tests and linting
-   - Deploy to Azure Static Web Apps
+Push to `main` branch — CI/CD pipelines deploy automatically:
+- `backend-deploy.yml` → builds Docker image → deploys to App Service
+- `frontend-deploy.yml` → builds Vite → deploys to Static Web App
 
-2. **Backend Deployment** (`.github/workflows/backend-deploy.yml`)
-   - Build Docker image
-   - Run tests and linting
-   - Push to Azure Container Registry
-   - Deploy to Azure App Service
+## Monitoring & Alerts
 
-3. **Infrastructure Deployment** (`.github/workflows/infrastructure-deploy.yml`)
-   - Terraform plan
-   - Manual approval for production
-   - Terraform apply
-   - Drift detection
+Configured via Terraform:
+- High CPU (>80%) and Memory (>85%) alerts
+- HTTP 5xx error rate alerts
+- Response time degradation (>2s)
+- Email notifications to configured alert email
 
-## 📚 Documentation
+Dashboards available in Azure Portal → Application Insights.
 
-- 🔑 [**GitHub Setup Guide**](docs/GITHUB_SETUP.md) - **START HERE** - Configure secrets and CI/CD
-- 🏗️ [Architecture Details](docs/ARCHITECTURE.md)
-- 🔥 [Chaos Scenarios Guide](docs/CHAOS_SCENARIOS.md)
-- 🚀 [Deployment Guide](docs/DEPLOYMENT.md)
-- 🧪 [E2E Testing Instructions](.github/instructions/e2e-testing.instructions.md) - Testing conventions and patterns
-- 🤖 [Copilot Agents](.github/agents/) - Custom agents for test generation and infrastructure
+## Project Structure
 
-## 🤝 Contributing
+```
+todo-app/
+├── frontend/              # React 18 + Vite + Tailwind CSS
+│   └── src/
+│       ├── components/    # React components
+│       ├── pages/         # Route pages
+│       └── api/           # HTTP client (Axios)
+├── backend/               # Node.js 20 + Express + Prisma
+│   ├── src/
+│   │   ├── routes/        # API route handlers
+│   │   ├── middleware/    # Express middleware
+│   │   └── config/        # App config (DB, Redis, AppInsights)
+│   └── prisma/            # Schema + migrations
+├── terraform/             # Azure IaC
+│   └── environments/      # Per-environment tfvars
+├── e2e/                   # Playwright E2E tests
+│   ├── pages/             # Page Object Models
+│   └── tests/             # Test specs
+├── .github/
+│   ├── workflows/         # CI/CD pipelines
+│   ├── agents/            # Copilot custom agents
+│   └── instructions/      # Copilot instructions
+├── .devcontainer/         # Codespaces environment
+├── .vscode/               # VS Code config + MCP servers
+└── docs/                  # Architecture, deployment guides
+```
 
-This is a demo repository. For suggestions or improvements:
-1. Fork the repository
-2. Create a feature branch
-3. Submit a pull request
+## Documentation
 
-## 📝 License
+- [Architecture](docs/ARCHITECTURE.md)
+- [Deployment Guide](docs/DEPLOYMENT.md)
+- [GitHub Setup](docs/GITHUB_SETUP.md)
+- [Copilot Agent Workshop](docs/COPILOT_AGENT_WORKSHOP.md)
+- [E2E Testing Instructions](.github/instructions/e2e-testing.instructions.md)
 
-MIT License - see [LICENSE](LICENSE) file for details
+## RHDH Template
 
-## 🔗 Resources
+This repository is registered as a Software Template in Red Hat Developer Hub. To use it:
 
-- [Azure SRE Agent Documentation](https://learn.microsoft.com/azure)
+1. Open the RHDH portal
+2. Go to **Create** → select **Todo App — Three Horizons Golden Path**
+3. Fill in the wizard (app name, environment, Azure region)
+4. The scaffolder creates a new repo, provisions Azure infrastructure, and registers in the catalog
+
+## License
+
+MIT License
+
+## Resources
+
 - [GitHub Copilot](https://github.com/features/copilot)
 - [Terraform Azure Provider](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
+- [Red Hat Developer Hub](https://developers.redhat.com/rhdh)
 - [Azure Architecture Center](https://learn.microsoft.com/azure/architecture/)
 
 ---
 
-**Built with ❤️ for Azure SRE Agent demonstrations**
-# SRE Demo Update Wed Oct 15 14:57:30 -05 2025
+**Built with the Three Horizons Golden Path — Agentic DevOps Platform**

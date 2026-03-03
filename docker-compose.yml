@@ -3,7 +3,7 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: sre-demo-postgres
+    container_name: todo-app-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -20,7 +20,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: sre-demo-redis
+    container_name: todo-app-redis
     ports:
       - "6379:6379"
     command: redis-server --appendonly yes
@@ -37,7 +37,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: production
-    container_name: sre-demo-backend
+    container_name: todo-app-backend
     ports:
       - "3000:3000"
     environment:
@@ -66,7 +66,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       target: production
-    container_name: sre-demo-frontend
+    container_name: todo-app-frontend
     ports:
       - "8080:80"
     depends_on:
@@ -86,4 +86,4 @@ volumes:
 
 networks:
   default:
-    name: sre-demo-network
+    name: todo-app-network

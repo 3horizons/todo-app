@@ -1,10 +1,10 @@
 # GitHub Configuration Guide
 
-This guide covers all GitHub configurations needed to enable CI/CD, automated deployments, and Azure SRE Agent integration.
+This guide covers all GitHub configurations needed to enable CI/CD, automated deployments, and GitHub Actions CI/CD.
 
 ## Required GitHub Secrets
 
-Go to your repository: https://github.com/paulanunes85/sre-demo
+Go to your repository: https://github.com/YOUR_ORG/todo-app
 
 Navigate to: **Settings → Secrets and variables → Actions → New repository secret**
 
@@ -16,7 +16,7 @@ These secrets allow GitHub Actions to authenticate with Azure:
 - **Description:** Azure Service Principal Application (client) ID
 - **How to get:**
 ```bash
-az ad sp create-for-rbac --name "sre-demo-terraform" \
+az ad sp create-for-rbac --name "todo-app-terraform" \
   --role Contributor \
   --scopes /subscriptions/YOUR_SUBSCRIPTION_ID \
   --sdk-auth
@@ -68,7 +68,7 @@ az account show --query tenantId -o tsv
 - **How to create ACR:**
 ```bash
 az acr create \
-  --resource-group sre-demo-rg \
+  --resource-group todo-app-rg \
   --name sredemoregistry \
   --sku Basic \
   --admin-enabled true
@@ -117,7 +117,7 @@ These will be available AFTER you deploy infrastructure with Terraform:
 cd terraform
 terraform output -raw app_service_name
 ```
-- **Example:** `sre-demo-backend-dev-abc123`
+- **Example:** `todo-app-backend-dev-abc123`
 
 #### `AZURE_WEBAPP_NAME_STAGING`
 - **Description:** Backend App Service name for staging (if using)
@@ -129,7 +129,7 @@ terraform output -raw app_service_name
 
 #### `AZURE_RESOURCE_GROUP`
 - **Description:** Azure Resource Group name
-- **Example:** `sre-demo-rg`
+- **Example:** `todo-app-rg`
 - **Note:** This should match your `terraform.tfvars`
 
 ### 6. Static Web App Secrets
@@ -149,7 +149,7 @@ terraform output -raw static_web_app_api_key
 cd terraform
 terraform output -raw app_service_url
 ```
-- **Example:** `https://sre-demo-backend-dev-abc123.azurewebsites.net`
+- **Example:** `https://todo-app-backend-dev-abc123.azurewebsites.net`
 
 ## GitHub Secrets Summary Checklist
 
@@ -193,7 +193,7 @@ az login
 az account set --subscription "YOUR_SUBSCRIPTION_NAME"
 
 az ad sp create-for-rbac \
-  --name "sre-demo-terraform" \
+  --name "todo-app-terraform" \
   --role Contributor \
   --scopes /subscriptions/$(az account show --query id -o tsv) \
   --sdk-auth > azure-credentials.json
@@ -205,11 +205,11 @@ cat azure-credentials.json
 2. **Create Azure Container Registry:**
 ```bash
 # Create resource group first
-az group create --name sre-demo-rg --location eastus
+az group create --name todo-app-rg --location eastus
 
 # Create ACR
 az acr create \
-  --resource-group sre-demo-rg \
+  --resource-group todo-app-rg \
   --name sredemoregistry \
   --sku Basic \
   --admin-enabled true
@@ -229,7 +229,7 @@ az acr credential show --name sredemoregistry
 - REGISTRY_PASSWORD (from `az acr credential show`)
 - POSTGRES_ADMIN_PASSWORD (choose a strong password)
 - ALERT_EMAIL (your email)
-- AZURE_RESOURCE_GROUP (`sre-demo-rg`)
+- AZURE_RESOURCE_GROUP (`todo-app-rg`)
 
 ### Phase 2: Deploy Infrastructure
 

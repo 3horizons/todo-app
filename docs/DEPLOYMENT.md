@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide provides step-by-step instructions for deploying the Azure SRE Demo application to Azure.
+This guide provides step-by-step instructions for deploying the Todo App to Azure.
 
 ## Prerequisites
 
@@ -76,7 +76,7 @@ This guide provides step-by-step instructions for deploying the Azure SRE Demo a
    ```bash
    # Create service principal
    az ad sp create-for-rbac \
-     --name "sre-demo-terraform" \
+     --name "todo-app-terraform" \
      --role Contributor \
      --scopes /subscriptions/YOUR_SUBSCRIPTION_ID
    
@@ -89,13 +89,13 @@ This guide provides step-by-step instructions for deploying the Azure SRE Demo a
 5. **Create Azure Container Registry**
    ```bash
    az acr create \
-     --resource-group sre-demo-rg \
-     --name sredemoregistry \
+     --resource-group todo-app-rg \
+     --name todoappreg \
      --sku Basic \
      --admin-enabled true
    
    # Get credentials
-   az acr credential show --name sredemoregistry
+   az acr credential show --name todoappreg
    ```
 
 ## Environment Configuration
@@ -103,8 +103,8 @@ This guide provides step-by-step instructions for deploying the Azure SRE Demo a
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/sre-demo.git
-cd sre-demo
+git clone https://github.com/YOUR_USERNAME/todo-app.git
+cd todo-app
 ```
 
 ### 2. Configure Backend Environment
@@ -143,22 +143,22 @@ cd ../terraform
 
 Create `terraform.tfvars`:
 ```hcl
-project_name         = "sre-demo"
+project_name         = "todo-app"
 environment          = "dev"
 location             = "eastus"
-resource_group_name  = "sre-demo-rg"
+resource_group_name  = "todo-app-rg"
 
 postgres_admin_username = "adminuser"
 postgres_admin_password = "YourSecurePassword123!" # Use strong password!
 
 alert_email = "your-email@example.com"
 
-docker_registry_url = "sredemoregistry.azurecr.io"
-docker_image_name   = "sre-demo-backend"
+docker_registry_url = "todoappreg.azurecr.io"
+docker_image_name   = "todo-app-backend"
 docker_image_tag    = "latest"
 
 tags = {
-  Project     = "SRE Demo"
+  Project     = "Todo App"
   Owner       = "Your Name"
   Environment = "dev"
 }
@@ -211,12 +211,12 @@ ARM_SUBSCRIPTION_ID=<your subscription id>
 ARM_TENANT_ID=<your tenant id>
 POSTGRES_ADMIN_PASSWORD=<your db password>
 ALERT_EMAIL=<your email>
-REGISTRY_NAME=sredemoregistry
+REGISTRY_NAME=todoappreg
 REGISTRY_USERNAME=<from az acr credential show>
 REGISTRY_PASSWORD=<from az acr credential show>
 AZURE_CREDENTIALS=<service principal JSON>
 AZURE_WEBAPP_NAME_DEV=<from terraform output>
-AZURE_RESOURCE_GROUP=sre-demo-rg
+AZURE_RESOURCE_GROUP=todo-app-rg
 AZURE_STATIC_WEB_APPS_API_TOKEN=<from terraform output>
 VITE_API_BASE_URL=<backend URL from terraform>
 ```
@@ -242,13 +242,13 @@ gh workflow run frontend-deploy.yml
 cd backend
 
 # Login to ACR
-az acr login --name sredemoregistry
+az acr login --name todoappreg
 
 # Build image
-docker build -t sredemoregistry.azurecr.io/sre-demo-backend:latest .
+docker build -t todoappreg.azurecr.io/todo-app-backend:latest .
 
 # Push image
-docker push sredemoregistry.azurecr.io/sre-demo-backend:latest
+docker push todoappreg.azurecr.io/todo-app-backend:latest
 ```
 
 2. **Configure App Service**
@@ -264,7 +264,7 @@ APPINSIGHTS_CS=$(terraform output -raw application_insights_connection_string)
 # Configure App Service
 az webapp config appsettings set \
   --name $WEBAPP_NAME \
-  --resource-group sre-demo-rg \
+  --resource-group todo-app-rg \
   --settings \
     NODE_ENV=production \
     PORT=3000 \
@@ -278,19 +278,19 @@ az webapp config appsettings set \
 ```bash
 az webapp config container set \
   --name $WEBAPP_NAME \
-  --resource-group sre-demo-rg \
-  --docker-custom-image-name sredemoregistry.azurecr.io/sre-demo-backend:latest \
-  --docker-registry-server-url https://sredemoregistry.azurecr.io
+  --resource-group todo-app-rg \
+  --docker-custom-image-name todoappreg.azurecr.io/todo-app-backend:latest \
+  --docker-registry-server-url https://todoappreg.azurecr.io
 
 # Restart App Service
-az webapp restart --name $WEBAPP_NAME --resource-group sre-demo-rg
+az webapp restart --name $WEBAPP_NAME --resource-group todo-app-rg
 ```
 
 4. **Run Database Migrations**
 
 ```bash
 # SSH into App Service
-az webapp ssh --name $WEBAPP_NAME --resource-group sre-demo-rg
+az webapp ssh --name $WEBAPP_NAME --resource-group todo-app-rg
 
 # Run migrations
 cd /app
@@ -323,7 +323,7 @@ npm run build
 # Deploy to Static Web App
 az staticwebapp deploy \
   --name <static-web-app-name> \
-  --resource-group sre-demo-rg \
+  --resource-group todo-app-rg \
   --app-location "." \
   --output-location "dist" \
   --api-token <deployment-token>
@@ -438,7 +438,7 @@ az monitor metrics alert list --resource-group <resource-group>
 ### 3. Set Up Dashboard
 
 1. Go to Azure Portal → Dashboards
-2. Create new dashboard named "SRE Demo Monitoring"
+2. Create new dashboard named "Todo App Monitoring"
 3. Add widgets:
    - Application Insights metrics
    - App Service metrics
@@ -446,14 +446,14 @@ az monitor metrics alert list --resource-group <resource-group>
    - Redis metrics
    - Alert summary
 
-### 4. Configure GitHub Integration (for SRE Agent)
+### 4. Configure GitHub Integration
 
-This will be set up when you configure Azure SRE Agent:
+This will be set up when you configure the GitHub integration:
 
 1. Create GitHub Personal Access Token
 2. Configure in Azure Portal
-3. Test by triggering chaos scenario
-4. Verify GitHub issue creation
+3. Test by checking health endpoint
+4. Verify monitoring alerts
 
 ## Environment-Specific Deployments
 
@@ -501,17 +501,17 @@ Recommended changes for production:
 ```bash
 # List available images
 az acr repository show-tags \
-  --name sredemoregistry \
-  --repository sre-demo-backend
+  --name todoappreg \
+  --repository todo-app-backend
 
 # Deploy previous version
 az webapp config container set \
   --name $WEBAPP_NAME \
-  --resource-group sre-demo-rg \
-  --docker-custom-image-name sredemoregistry.azurecr.io/sre-demo-backend:v1.0.0
+  --resource-group todo-app-rg \
+  --docker-custom-image-name todoappreg.azurecr.io/todo-app-backend:v1.0.0
 
 # Restart
-az webapp restart --name $WEBAPP_NAME --resource-group sre-demo-rg
+az webapp restart --name $WEBAPP_NAME --resource-group todo-app-rg
 ```
 
 ### Database Rollback
@@ -519,9 +519,9 @@ az webapp restart --name $WEBAPP_NAME --resource-group sre-demo-rg
 ```bash
 # Restore from backup
 az postgres flexible-server restore \
-  --resource-group sre-demo-rg \
-  --name sre-demo-postgres-restored \
-  --source-server sre-demo-postgres \
+  --resource-group todo-app-rg \
+  --name todo-app-postgres-restored \
+  --source-server todo-app-postgres \
   --restore-time "2024-01-15T10:30:00Z"
 ```
 
@@ -546,12 +546,12 @@ terraform apply
 
 ```bash
 # Check ACR login
-az acr check-health --name sredemoregistry
+az acr check-health --name todoappreg
 
 # Verify App Service can access ACR
 az webapp config show \
   --name $WEBAPP_NAME \
-  --resource-group sre-demo-rg \
+  --resource-group todo-app-rg \
   --query "siteConfig.appSettings"
 ```
 
@@ -563,8 +563,8 @@ psql "$DATABASE_URL"
 
 # Check firewall rules
 az postgres flexible-server firewall-rule list \
-  --resource-group sre-demo-rg \
-  --name sre-demo-postgres
+  --resource-group todo-app-rg \
+  --name todo-app-postgres
 ```
 
 #### 3. Application Insights Not Receiving Data
@@ -572,13 +572,13 @@ az postgres flexible-server firewall-rule list \
 ```bash
 # Verify connection string
 az monitor app-insights component show \
-  --app sre-demo-appinsights \
-  --resource-group sre-demo-rg
+  --app todo-app-appinsights \
+  --resource-group todo-app-rg
 
 # Check App Service configuration
 az webapp config appsettings list \
   --name $WEBAPP_NAME \
-  --resource-group sre-demo-rg \
+  --resource-group todo-app-rg \
   | grep APPLICATIONINSIGHTS
 ```
 
@@ -595,18 +595,18 @@ terraform force-unlock <LOCK_ID>
 # View App Service logs
 az webapp log tail \
   --name $WEBAPP_NAME \
-  --resource-group sre-demo-rg
+  --resource-group todo-app-rg
 
 # View container logs
 az webapp log download \
   --name $WEBAPP_NAME \
-  --resource-group sre-demo-rg \
+  --resource-group todo-app-rg \
   --log-file app-logs.zip
 
 # SSH into container
 az webapp ssh \
   --name $WEBAPP_NAME \
-  --resource-group sre-demo-rg
+  --resource-group todo-app-rg
 ```
 
 ## Cleanup
@@ -620,14 +620,14 @@ terraform destroy -auto-approve
 
 # Or delete resource group
 az group delete \
-  --name sre-demo-rg \
+  --name todo-app-rg \
   --yes \
   --no-wait
 
 # Delete container images
 az acr repository delete \
-  --name sredemoregistry \
-  --repository sre-demo-backend \
+  --name todoappreg \
+  --repository todo-app-backend \
   --yes
 ```
 
@@ -651,7 +651,7 @@ az consumption usage list \
 
 # Set budget alert
 az consumption budget create \
-  --budget-name sre-demo-budget \
+  --budget-name todo-app-budget \
   --amount 100 \
   --time-grain Monthly \
   --start-date 2024-01-01 \
